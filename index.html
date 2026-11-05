@@ -64,6 +64,89 @@
     </style>
 </head>
 <body class="bg-darkbg text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+	<!-- ===== Cloud sync (Supabase) =====
+		 Paste this whole block just BEFORE </body> in index.html.
+		 Then replace the two values on the SUPABASE_URL and SUPABASE_KEY lines. -->
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<div id="syncBox" style="position:fixed;bottom:10px;right:10px;background:#fff;color:#000;padding:8px;border-radius:8px;box-shadow:0 2px 8px #0003;font:13px sans-serif;z-index:9999">
+	  <div id="syncOut">
+		<input id="sEmail" placeholder="Email" style="width:150px"><br>
+		<input id="sPass" type="password" placeholder="Password (6+ chars)" style="width:150px"><br>
+		<button onclick="sSignUp()">Sign up</button>
+		<button onclick="sLogin()">Log in</button>
+	  </div>
+	  <div id="syncIn" style="display:none">
+		Synced: <span id="sUser"></span><br>
+		<button onclick="pushProgress(true)">Sync now</button>
+		<button onclick="sLogout()">Log out</button>
+	  </div>
+	</div>
+	<script>
+	const SUPABASE_URL = 'https://kbotzgzstxyinppptzpq.supabase.co';   // <- paste your Project URL
+	const SUPABASE_KEY = 'sb_publishable_HY4gul30Ah0rroWlkHQmjg_0HXiUljQ';                // <- paste your publishable key
+	const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+	const TABLE = 'c_progress';
+
+	// Collect everything the app saved in this browser (except the login itself)
+	function snapshot() {
+	  const o = {};
+	  for (let i = 0; i < localStorage.length; i++) {
+		const k = localStorage.key(i);
+		if (!k.startsWith('sb-')) o[k] = localStorage.getItem(k);
+	  }
+	  return o;
+	}
+
+	// Download progress from the cloud once per visit
+	async function pullProgress(user) {
+	  if (sessionStorage.getItem('pulled')) return;
+	  sessionStorage.setItem('pulled', '1');
+	  const { data } = await sb.from(TABLE).select('data').eq('user_id', user.id).maybeSingle();
+	  if (data && JSON.stringify(data.data) !== JSON.stringify(snapshot())) {
+		Object.entries(data.data).forEach(([k, v]) => localStorage.setItem(k, v));
+		location.reload();
+	  } else if (!data) {
+		pushProgress();   // first login: upload this device's progress
+	  }
+	}
+
+	// Upload progress to the cloud
+	async function pushProgress(showMsg) {
+	  const { data: { user } } = await sb.auth.getUser();
+	  if (!user) return;
+	  const { error } = await sb.from(TABLE).upsert({
+		user_id: user.id, data: snapshot(), updated_at: new Date().toISOString()
+	  });
+	  if (showMsg) alert(error ? 'Sync failed: ' + error.message : 'Progress saved to cloud!');
+	}
+
+	async function sSignUp() {
+	  const { error } = await sb.auth.signUp({ email: sEmail.value, password: sPass.value });
+	  if (error) alert(error.message);
+	}
+	async function sLogin() {
+	  const { error } = await sb.auth.signInWithPassword({ email: sEmail.value, password: sPass.value });
+	  if (error) alert(error.message);
+	}
+	async function sLogout() {
+	  await pushProgress();
+	  await sb.auth.signOut();
+	  sessionStorage.clear();
+	  location.reload();
+	}
+
+	sb.auth.onAuthStateChange((_event, session) => {
+	  const u = session?.user;
+	  syncOut.style.display = u ? 'none' : 'block';
+	  syncIn.style.display  = u ? 'block' : 'none';
+	  if (u) { sUser.textContent = u.email; pullProgress(u); }
+	});
+
+	setInterval(pushProgress, 30000);   // auto-save every 30 seconds
+	document.addEventListener('visibilitychange', () => { if (document.hidden) pushProgress(); });
+	</script>
+	<!-- ===== End cloud sync ===== -->
+
 
     <!-- TOP NAVIGATION BAR -->
     <header class="bg-cardbg/80 backdrop-blur border-b border-borderbg sticky top-0 z-40 px-4 py-3">
@@ -1196,87 +1279,5 @@ CREATE POLICY "Allow individual write own progress" ON public.lesson_progress
             renderRoadmap();
         };
     </script>
-		<!-- ===== Cloud sync (Supabase) =====
-		 Paste this whole block just BEFORE </body> in index.html.
-		 Then replace the two values on the SUPABASE_URL and SUPABASE_KEY lines. -->
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<div id="syncBox" style="position:fixed;bottom:10px;right:10px;background:#fff;color:#000;padding:8px;border-radius:8px;box-shadow:0 2px 8px #0003;font:13px sans-serif;z-index:9999">
-	  <div id="syncOut">
-		<input id="sEmail" placeholder="Email" style="width:150px"><br>
-		<input id="sPass" type="password" placeholder="Password (6+ chars)" style="width:150px"><br>
-		<button onclick="sSignUp()">Sign up</button>
-		<button onclick="sLogin()">Log in</button>
-	  </div>
-	  <div id="syncIn" style="display:none">
-		Synced: <span id="sUser"></span><br>
-		<button onclick="pushProgress(true)">Sync now</button>
-		<button onclick="sLogout()">Log out</button>
-	  </div>
-	</div>
-	<script>
-	const SUPABASE_URL = 'https://kbotzgzstxyinppptzpq.supabase.co';   // <- paste your Project URL
-	const SUPABASE_KEY = 'sb_publishable_HY4gul30Ah0rroWlkHQmjg_0HXiUljQ';                // <- paste your publishable key
-	const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-	const TABLE = 'c_progress';
-
-	// Collect everything the app saved in this browser (except the login itself)
-	function snapshot() {
-	  const o = {};
-	  for (let i = 0; i < localStorage.length; i++) {
-		const k = localStorage.key(i);
-		if (!k.startsWith('sb-')) o[k] = localStorage.getItem(k);
-	  }
-	  return o;
-	}
-
-	// Download progress from the cloud once per visit
-	async function pullProgress(user) {
-	  if (sessionStorage.getItem('pulled')) return;
-	  sessionStorage.setItem('pulled', '1');
-	  const { data } = await sb.from(TABLE).select('data').eq('user_id', user.id).maybeSingle();
-	  if (data && JSON.stringify(data.data) !== JSON.stringify(snapshot())) {
-		Object.entries(data.data).forEach(([k, v]) => localStorage.setItem(k, v));
-		location.reload();
-	  } else if (!data) {
-		pushProgress();   // first login: upload this device's progress
-	  }
-	}
-
-	// Upload progress to the cloud
-	async function pushProgress(showMsg) {
-	  const { data: { user } } = await sb.auth.getUser();
-	  if (!user) return;
-	  const { error } = await sb.from(TABLE).upsert({
-		user_id: user.id, data: snapshot(), updated_at: new Date().toISOString()
-	  });
-	  if (showMsg) alert(error ? 'Sync failed: ' + error.message : 'Progress saved to cloud!');
-	}
-
-	async function sSignUp() {
-	  const { error } = await sb.auth.signUp({ email: sEmail.value, password: sPass.value });
-	  if (error) alert(error.message);
-	}
-	async function sLogin() {
-	  const { error } = await sb.auth.signInWithPassword({ email: sEmail.value, password: sPass.value });
-	  if (error) alert(error.message);
-	}
-	async function sLogout() {
-	  await pushProgress();
-	  await sb.auth.signOut();
-	  sessionStorage.clear();
-	  location.reload();
-	}
-
-	sb.auth.onAuthStateChange((_event, session) => {
-	  const u = session?.user;
-	  syncOut.style.display = u ? 'none' : 'block';
-	  syncIn.style.display  = u ? 'block' : 'none';
-	  if (u) { sUser.textContent = u.email; pullProgress(u); }
-	});
-
-	setInterval(pushProgress, 30000);   // auto-save every 30 seconds
-	document.addEventListener('visibilitychange', () => { if (document.hidden) pushProgress(); });
-	</script>
-	<!-- ===== End cloud sync ===== -->
 </body>
 </html>
