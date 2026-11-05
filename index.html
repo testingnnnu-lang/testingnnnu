@@ -1,1283 +1,889 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full dark">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>C++ Master - Interactive SoloLearn Platform</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            400: '#4ade80',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            900: '#14532d',
-                        },
-                        accent: {
-                            500: '#a855f7',
-                            600: '#9333ea',
-                            700: '#7e22ce',
-                        },
-                        darkbg: '#0f172a',
-                        cardbg: '#1e293b',
-                        borderbg: '#334155'
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                        mono: ['Fira Code', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        /* Custom card flip CSS */
-        .perspective-1000 { perspective: 1000px; }
-        .transform-style-3d { transform-style: preserve-3d; }
-        .backface-hidden { backface-visibility: hidden; }
-        .rotate-y-180 { transform: rotateY(180deg); }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        @keyframes pulse-glow {
-            0%, 100% { box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
-            50% { box-shadow: 0 0 25px rgba(34, 197, 94, 0.8); }
-        }
-        .active-level-glow { animation: pulse-glow 2s infinite; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CppMaster</title>
+<!-- Supabase library. If this server is blocked, the page tries a second server automatically (see START section). -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--bg:#f4f6fb;--card:#fff;--text:#1d2433;--muted:#6b7385;--line:#e3e7ef;--blue:#2f6df6;
+        --green:#16a34a;--red:#dc2626;--soft:#eef2fb;--code:#0f172a}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.45}
+  header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .bar{max-width:880px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:12px}
+  .logo{font-weight:800;font-size:19px;cursor:pointer;user-select:none}
+  .logo span{color:var(--blue)}
+  #sync{font-size:12px;color:var(--muted);margin-left:auto;text-align:right}
+  main{max-width:880px;margin:0 auto;padding:18px 16px 60px}
+  .card{background:var(--card);border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.06);margin-bottom:16px}
+  h1{font-size:22px;margin:0 0 4px} h2{font-size:18px;margin:0 0 12px} h3{font-size:15px;margin:14px 0 8px}
+  .muted{color:var(--muted);font-size:14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:14px 0}
+  .stat{background:var(--soft);border-radius:12px;padding:12px}
+  .stat .n{font-size:22px;font-weight:700}
+  .stat .l{font-size:12px;color:var(--muted)}
+  .progress{height:10px;background:var(--line);border-radius:99px;overflow:hidden;margin:6px 0 4px}
+  .progress>div{height:100%;background:var(--blue);transition:width .3s}
+  button{font:inherit;font-weight:600;border:none;border-radius:10px;padding:12px 16px;cursor:pointer;background:var(--blue);color:#fff}
+  button.sec{background:var(--soft);color:var(--text)}
+  button.small{padding:6px 12px;font-size:13px}
+  button:disabled{opacity:.5;cursor:default}
+  .full{width:100%;margin-top:12px}
+  .row{display:flex;gap:10px;margin-top:12px}
+  .row>*{flex:1}
+  input{width:100%;padding:12px;font-size:16px;border:1px solid #d5d9e3;border-radius:10px;margin-top:6px}
+  label{display:block;font-size:14px;margin-top:12px}
+  .levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .lv{border:1px solid var(--line);border-radius:10px;padding:10px;font-size:13px;background:#fff;text-align:left;color:var(--text);font-weight:500;min-height:64px}
+  .lv b{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:2px}
+  .lv.done{border-color:#bbf7d0;background:#f0fdf4}
+  .lv.cur{border-color:var(--blue);background:#eff5ff;box-shadow:0 0 0 2px #c7d8ff}
+  .lv.lock,.lv.soon{opacity:.55;cursor:default}
+  pre{background:var(--code);color:#e2e8f0;padding:14px;border-radius:10px;overflow-x:auto;font-size:14px;line-height:1.5;margin:12px 0;white-space:pre}
+  code,.mono{font-family:ui-monospace,Consolas,Menlo,monospace}
+  .flash{min-height:240px;border:2px solid var(--line);border-radius:16px;padding:22px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;background:#fff;user-select:none}
+  .flash.back{border-color:var(--blue);background:#f8fbff}
+  .flash .tag{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+  .flash .front{font-size:20px;font-weight:700}
+  .flash .txt{white-space:pre-line;font-size:16px}
+  .opt{display:flex;align-items:center;width:100%;text-align:left;background:#fff;color:var(--text);border:2px solid var(--line);margin:8px 0;font-weight:500;font-family:ui-monospace,Consolas,Menlo,monospace}
+  .opt .k{flex:none;width:28px;height:28px;border-radius:50%;background:var(--soft);text-align:center;line-height:28px;margin-right:12px;font-weight:700;font-size:13px;font-family:system-ui,sans-serif}
+  .opt.right{border-color:var(--green);background:#f0fdf4}
+  .opt.wrong{border-color:var(--red);background:#fef2f2}
+  .fb{border-radius:12px;padding:14px;margin-top:12px;font-size:15px}
+  .fb.ok{background:#f0fdf4;border:1px solid #bbf7d0}
+  .fb.no{background:#fef2f2;border:1px solid #fecaca}
+  .top{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:14px;flex-wrap:wrap}
+  .timer{font-weight:700;font-variant-numeric:tabular-nums}
+  .chip{display:inline-block;padding:4px 10px;border-radius:99px;font-size:13px;background:var(--soft);margin:3px 4px 3px 0}
+  .big{font-size:46px;font-weight:800;margin:4px 0}
+  .rev{border-top:1px solid var(--line);padding:12px 0}
+  .hidden{display:none}
+  .msg{min-height:20px;font-size:14px;margin-top:12px}
+  .err{color:var(--red)} .okc{color:var(--green)}
+</style>
 </head>
-<body class="bg-darkbg text-slate-100 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
-	<!-- ===== Cloud sync (Supabase) =====
-		 Paste this whole block just BEFORE </body> in index.html.
-		 Then replace the two values on the SUPABASE_URL and SUPABASE_KEY lines. -->
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<div id="syncBox" style="position:fixed;bottom:10px;right:10px;background:#fff;color:#000;padding:8px;border-radius:8px;box-shadow:0 2px 8px #0003;font:13px sans-serif;z-index:9999">
-	  <div id="syncOut">
-		<input id="sEmail" placeholder="Email" style="width:150px"><br>
-		<input id="sPass" type="password" placeholder="Password (6+ chars)" style="width:150px"><br>
-		<button onclick="sSignUp()">Sign up</button>
-		<button onclick="sLogin()">Log in</button>
-	  </div>
-	  <div id="syncIn" style="display:none">
-		Synced: <span id="sUser"></span><br>
-		<button onclick="pushProgress(true)">Sync now</button>
-		<button onclick="sLogout()">Log out</button>
-	  </div>
-	</div>
-	<script>
-	const SUPABASE_URL = 'https://kbotzgzstxyinppptzpq.supabase.co';   // <- paste your Project URL
-	const SUPABASE_KEY = 'sb_publishable_HY4gul30Ah0rroWlkHQmjg_0HXiUljQ';                // <- paste your publishable key
-	const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-	const TABLE = 'c_progress';
+<body>
+<header>
+  <div class="bar">
+    <div class="logo" onclick="user && renderDash()">Cpp<span>Master</span></div>
+    <div id="sync"></div>
+    <button id="logoutBtn" class="sec small hidden" onclick="logout()">Log out</button>
+  </div>
+</header>
+<main id="main"></main>
 
-	// Collect everything the app saved in this browser (except the login itself)
-	function snapshot() {
-	  const o = {};
-	  for (let i = 0; i < localStorage.length; i++) {
-		const k = localStorage.key(i);
-		if (!k.startsWith('sb-')) o[k] = localStorage.getItem(k);
-	  }
-	  return o;
-	}
+<script>
+// =====================================================================
+// 1. PASTE YOUR SUPABASE DETAILS HERE (same two values as before)
+//    Supabase dashboard → Project Settings → API (or the "Connect" button)
+// =====================================================================
+const SUPABASE_URL = "https://xffpppsqcvichogbwffs.supabase.co";
+const SUPABASE_KEY = "sb_publishable_D12S4maTtaJx0KNtQDil4g_gM4tPJ8e";   // publishable / anon key — NEVER the service_role key
 
-	// Download progress from the cloud once per visit
-	async function pullProgress(user) {
-	  if (sessionStorage.getItem('pulled')) return;
-	  sessionStorage.setItem('pulled', '1');
-	  const { data } = await sb.from(TABLE).select('data').eq('user_id', user.id).maybeSingle();
-	  if (data && JSON.stringify(data.data) !== JSON.stringify(snapshot())) {
-		Object.entries(data.data).forEach(([k, v]) => localStorage.setItem(k, v));
-		location.reload();
-	  } else if (!data) {
-		pushProgress();   // first login: upload this device's progress
-	  }
-	}
+// =====================================================================
+// 2. SETTINGS
+// =====================================================================
+const QUIZ_N = 15;        // questions per quiz
+const GEN_N = 4;          // how many of them are freshly generated (random numbers/words)
+const PASS = 60;          // % needed to unlock the next level
+const LEARN_SECS = 900;   // 15-minute learning session
+const DAILY_SECS = 1800;  // 30-minute daily target
+const TOTAL_LEVELS = 84;  // 12 weeks x 7 days
 
-	// Upload progress to the cloud
-	async function pushProgress(showMsg) {
-	  const { data: { user } } = await sb.auth.getUser();
-	  if (!user) return;
-	  const { error } = await sb.from(TABLE).upsert({
-		user_id: user.id, data: snapshot(), updated_at: new Date().toISOString()
-	  });
-	  if (showMsg) alert(error ? 'Sync failed: ' + error.message : 'Progress saved to cloud!');
-	}
+// =====================================================================
+// 3. HELPERS
+// =====================================================================
+const $ = id => document.getElementById(id);
+const main = $('main');
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const shuffle = arr => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const dayKey = d => d.toLocaleDateString('en-CA');           // YYYY-MM-DD in local time
+const today = () => dayKey(new Date());
+const fmtTime = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return h ? `${h}h ${m}m` : `${m}m ${s % 60}s`; };
+const mmss = s => { s = Math.max(0, Math.round(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+const codeBlock = c => c ? `<pre><code>${esc(c)}</code></pre>` : '';
+const prog = body => `#include <iostream>\nusing namespace std;\n\nint main() {\n${body.split('\n').map(l => '  ' + l).join('\n')}\n  return 0;\n}`;
 
-	async function sSignUp() {
-	  const { error } = await sb.auth.signUp({ email: sEmail.value, password: sPass.value });
-	  if (error) alert(error.message);
-	}
-	async function sLogin() {
-	  const { error } = await sb.auth.signInWithPassword({ email: sEmail.value, password: sPass.value });
-	  if (error) alert(error.message);
-	}
-	async function sLogout() {
-	  await pushProgress();
-	  await sb.auth.signOut();
-	  sessionStorage.clear();
-	  location.reload();
-	}
+// Content builders (keep the lesson data below short and readable)
+const K = (f, b, fcode, code) => ({ f, b, fcode, code });                           // flashcard
+const X = (p, a, e, code, m) => ({ p, a, e, code, m });                             // typing exercise
+const M = (tp, q, o, e, code) => ({ type: 'mcq', tp, q, o, e, code });              // multiple choice (o[0] is correct)
+const T = (tp, q, a, e, code, m) => ({ type: 'typed', tp, q, a, e, code, m });      // typed quiz question
+const G = (type, tp, q, code, extra) => ({ type, tp, q, code, ...extra });          // generated question
+// Build 4 unique options with the correct one first
+function numOpts(correct, cands) {
+  const out = [String(correct)], seen = new Set(out);
+  for (const c of cands) { const v = String(c); if (!seen.has(v)) { seen.add(v); out.push(v); } if (out.length === 4) break; }
+  let k = 2; while (out.length < 4) { const v = String(Number(correct) + k++); if (!seen.has(v)) { seen.add(v); out.push(v); } }
+  return out;
+}
 
-	sb.auth.onAuthStateChange((_event, session) => {
-	  const u = session?.user;
-	  syncOut.style.display = u ? 'none' : 'block';
-	  syncIn.style.display  = u ? 'block' : 'none';
-	  if (u) { sUser.textContent = u.email; pullProgress(u); }
-	});
+// =====================================================================
+// 4. CURRICULUM — 84 levels following the W3Schools C++ Tutorial order
+// =====================================================================
+const LEVELS = [
+  'Introduction & First Program','Syntax & Statements','Output (cout)','New Lines & Escape Sequences','Comments','Variables','Multiple Variables, Identifiers & Constants',
+  'User Input (cin)','Data Types: int & double','Data Types: bool, char & string','Arithmetic Operators','Assignment Operators','Comparison & Logical Operators','Week 2 Review',
+  'Strings: Concatenation','Strings: Length & Access','Strings: Special Characters & Input','Math Functions (cmath)','Booleans & Expressions','if...else','Week 3 Review',
+  'else if & Short-hand if','switch','while Loop','do/while Loop','for Loop','Nested & Range-based for Loops','Week 4 Review',
+  'break & continue','Arrays: Basics','Arrays & Loops','Array Size','Multi-dimensional Arrays','Structures (struct)','Week 5 Review',
+  'Enums','References','Memory Address','Pointers','Dereference & Modify Pointers','Memory Management (new/delete)','Week 6 Review',
+  'Functions: Basics','Parameters & Arguments','Default Parameters & Return Values','Pass by Reference','Passing Arrays & Structures','Function Overloading','Week 7 Review',
+  'Scope','Recursion','Lambda Functions','OOP Introduction','Classes & Objects','Class Methods','Week 8 Review',
+  'Constructors','Access Specifiers','Encapsulation','Friend Functions','Inheritance','Multilevel & Multiple Inheritance','Week 9 Review',
+  'Inheritance Access','Polymorphism','Virtual Functions','Templates','Files (fstream)','Date & Time','Week 10 Review',
+  'Exceptions','Input Validation','Data Structures & STL','Vectors','List, Stack & Queue','Deque, Set & Map','Week 11 Review',
+  'Iterators','Algorithms','Practice: Small Programs','Practice: Debugging','Practice: Classes','Practice: STL','Final Review'
+];
 
-	setInterval(pushProgress, 30000);   // auto-save every 30 seconds
-	document.addEventListener('visibilitychange', () => { if (document.hidden) pushProgress(); });
-	</script>
-	<!-- ===== End cloud sync ===== -->
+// Lesson content. Each level: cards (flashcards), typing (exercises), mcq + typed (question bank), gens (random question generators)
+const C = {};
 
+C[1] = {
+  cards: [
+    K('What is C++?', 'C++ is a popular programming language created by Bjarne Stroustrup as an extension of the C language. It is used to build games, operating systems, browsers and other fast programs.'),
+    K('C vs C++', 'The main difference: C++ supports classes and objects (object-oriented programming), while C does not.'),
+    K('What do you need to write C++?', 'A text editor to write code, and a compiler (such as g++) that translates your code into a program the computer can run. An IDE like Code::Blocks or VS Code combines both.'),
+    K('Your first C++ program', 'This program prints Hello World! to the screen. Every C++ program runs the code inside main().', prog('cout << "Hello World!";')),
+    K('What does #include <iostream> do?', 'It adds the iostream header file library, which lets you use input and output objects such as cout and cin.'),
+    K('What does return 0; mean?', 'It ends the main() function. Returning 0 tells the operating system that the program finished successfully.'),
+    K('File extension', 'C++ source files are usually saved with the .cpp extension, for example myfirstprogram.cpp.'),
+  ],
+  typing: [
+    X('Complete the line that adds the input/output library:', ['iostream'], 'iostream is the header that provides cout and cin.', '#include <______>'),
+    X('Type the statement that prints Hello World! (assume using namespace std;):', ['cout << "Hello World!";'], 'Text goes in double quotes after cout <<, and the statement ends with ;'),
+    X('Every C++ program starts running from which function? (type just its name)', ['main', 'main()'], 'Execution always begins in main().'),
+    X('Type the statement that ends main and reports success:', ['return 0;'], 'return 0; ends main() and signals success.'),
+  ],
+  mcq: [
+    M('Origins', 'Who created C++?', ['Bjarne Stroustrup', 'Dennis Ritchie', 'James Gosling', 'Guido van Rossum'], 'Bjarne Stroustrup created C++ in the early 1980s.'),
+    M('Origins', 'C++ was created as an extension of which language?', ['C', 'Java', 'Python', 'Assembly'], 'C++ began as "C with Classes".'),
+    M('Origins', 'What is the main feature C++ adds to C?', ['Classes and objects', 'Automatic web pages', 'Indentation-based blocks', 'Spreadsheet formulas'], 'C++ supports object-oriented programming with classes and objects.'),
+    M('Files', 'Which file extension is normally used for C++ source code?', ['.cpp', '.cs', '.java', '.py'], '.cpp is the standard extension for C++ source files.'),
+    M('main()', 'Where does a C++ program begin running?', ['In the main() function', 'At the first #include line', 'At the last line of the file', 'In whichever function is longest'], 'Execution always starts in main().'),
+    M('Libraries', 'What does #include <iostream> do?', ['Adds the library for input and output such as cout', 'Creates the main function', 'Prints text to the screen', 'Ends the program'], 'iostream provides cout (output) and cin (input).'),
+    M('Output', 'What is cout used for?', ['Printing output to the screen', 'Reading keyboard input', 'Declaring a variable', 'Ending the program'], 'cout sends output to the screen.'),
+    M('main()', 'What does return 0; at the end of main() mean?', ['The program finished successfully', 'The program prints 0', 'The program restarts', 'An error happened'], 'Returning 0 from main signals success.'),
+    M('Tools', 'What does a compiler do?', ['Translates C++ code into a program the computer can run', 'Checks the spelling in comments', 'Stores your learning progress', 'Draws the user interface'], 'The compiler turns source code into an executable program.'),
+    M('Origins', 'Which of these is C++ widely used to build?', ['Game engines and operating systems', 'Web page styles (CSS)', 'Spreadsheet formulas', 'Email addresses'], 'C++ is used where speed and control matter.'),
+    M('Namespaces', 'What does using namespace std; let you do?', ['Write cout instead of std::cout', 'Skip writing main()', 'Make the program run faster', 'Include iostream automatically'], 'It lets you use standard library names without the std:: prefix.'),
+    M('Syntax', 'Which symbol ends most C++ statements?', [';', '.', ':', ','], 'Statements end with a semicolon.'),
+    M('Syntax', 'C++ is case-sensitive. What does that mean for Main and main?', ['They are different names', 'They are the same name', 'Both are keywords', 'Both cause errors'], 'Upper and lower case letters are different in C++.'),
+    M('main()', 'Which brackets enclose the body of main()?', ['{ }', '( )', '[ ]', '< >'], 'Curly braces mark the start and end of a block of code.'),
+  ],
+  typed: [
+    T('Libraries', 'Which header file do you include to use cout? (name only)', ['iostream', '<iostream>'], '#include <iostream> gives access to cout.'),
+    T('Output', 'Type the name of the object used to print output:', ['cout', 'std::cout'], 'cout is the standard output object.'),
+    T('main()', 'What number does main() return to signal success?', ['0'], 'return 0; means success.'),
+    T('Files', 'Type the file extension for C++ source files:', ['.cpp', 'cpp'], 'C++ files end in .cpp.'),
+  ],
+  gens: [
+    () => { const n = rnd(10, 999); return G('typed', 'First program', 'What does this program print?', prog(`cout << ${n};`), { a: [String(n)], m: 'out', e: `cout prints the value ${n}. Numbers do not need quotes.` }); },
+    () => { const w = pick(['Hello', 'C++ rocks', 'Welcome', 'Good morning', 'Keep coding']); return G('mcq', 'First program', 'What does this program print?', prog(`cout << "${w}";`), { o: [w, `"${w}"`, `cout << ${w}`, 'Nothing'], e: 'The quotes mark the text but are not printed.' }); },
+  ],
+};
 
-    <!-- TOP NAVIGATION BAR -->
-    <header class="bg-cardbg/80 backdrop-blur border-b border-borderbg sticky top-0 z-40 px-4 py-3">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <!-- Logo & Title -->
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-600 flex items-center justify-center shadow-lg font-bold text-white text-xl">
-                    C++
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-lg leading-tight bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">C++ Master</h1>
-                    <p class="text-xs text-slate-400 hidden sm:block">W3Schools Curriculum • 12 Weeks</p>
-                </div>
-            </div>
+C[2] = {
+  cards: [
+    K('Line by line: #include <iostream>', 'A header file library that lets you work with input and output objects like cout.'),
+    K('Line by line: using namespace std;', 'Lets you use names from the standard library (like cout) without writing std:: in front.'),
+    K('What is a statement?', 'A statement is a single instruction for the computer. Every C++ statement ends with a semicolon ;', null, 'cout << "Hello World!";'),
+    K('In what order do statements run?', 'One by one, from top to bottom, in the order they are written.', null, 'cout << "First";\ncout << "Second";'),
+    K('What if you forget the semicolon?', 'The compiler stops with an error such as "expected \';\' before ...". The program will not run until you fix it.'),
+    K('Writing code without using namespace std', 'You can leave out that line and write std:: before cout instead.', null, '#include <iostream>\n\nint main() {\n  std::cout << "Hello World!";\n  return 0;\n}'),
+    K('Does whitespace matter?', 'The compiler ignores extra spaces and blank lines. Use them to make code easier for people to read.'),
+  ],
+  typing: [
+    X('Add the missing symbol at the end of this statement:', [';'], 'Every statement must end with a semicolon.', 'cout << "Hi"___'),
+    X('Print Hi without using namespace std (use the std:: prefix):', ['std::cout << "Hi";'], 'std::cout is the full name of cout.'),
+    X('Complete the first line of the main function:', ['main'], 'int main() is where the program starts.', 'int ____() {'),
+    X('Which symbols open and close a block of code? Type both, opening first:', ['{}'], 'Curly braces { } group statements into a block.'),
+  ],
+  mcq: [
+    M('Statements', 'What is a statement in C++?', ['An instruction for the computer to perform', 'A note ignored by the compiler', 'A library of functions', 'A type of file'], 'Statements are instructions; each ends with ;'),
+    M('Statements', 'What happens if you forget a semicolon at the end of a statement?', ['The compiler reports an error', 'The program runs normally', 'A semicolon is printed', 'That line is skipped silently'], 'A missing ; is a syntax error.'),
+    M('Statements', 'In what order are statements executed?', ['Top to bottom, one by one', 'In random order', 'Bottom to top', 'Alphabetically'], 'Statements run in the order they are written.'),
+    M('Namespaces', 'In std::cout, what does std:: mean?', ['cout belongs to the std (standard) namespace', 'std is a variable', 'It starts a comment', 'It is a file name'], 'std is the standard library namespace.'),
+    M('Output', 'Which line is written correctly?', ['cout << "Hi";', 'cout >> "Hi";', 'cout << "Hi"', 'Cout << "Hi";'], 'Use << with lower-case cout, and end with ;'),
+    M('Statements', 'How many statements are here?', ['2', '1', '3', '0'], 'Each statement ends with ; so there are two.', 'cout << "A";\nreturn 0;'),
+    M('Whitespace', 'What does the compiler do with blank lines?', ['Ignores them', 'Treats them as errors', 'Prints empty lines', 'Ends the program'], 'Whitespace is only for readability.'),
+    M('Statements', 'Can two statements be on the same line?', ['Yes, as long as each ends with ;', 'No, never', 'Only inside comments', 'Only in main()'], 'Lines do not matter to the compiler; semicolons do.'),
+    M('main()', 'In int main(), what does int mean?', ['main returns an integer value', 'main is a variable', 'It includes a library', 'It prints a number'], 'int is the return type of main().'),
+    M('Syntax', 'What do curly braces { } mark?', ['The start and end of a block of code', 'A comment', 'A piece of text', 'A library name'], 'Braces group statements into a block.'),
+    M('Libraries', 'Which line correctly includes a library?', ['#include <iostream>', 'include iostream;', '#import iostream', 'using iostream;'], 'Header libraries are added with #include < >.'),
+    M('Output', 'Which operator is used to send output to cout?', ['<<', '>>', '==', '->'], '<< is the insertion operator.'),
+    M('Namespaces', 'What must using namespace std end with?', [';', ':', 'Nothing', '}'], 'It is a statement, so it ends with ;'),
+    M('Output', 'What is printed?', ['HiYo', 'Hi Yo', 'Hi and Yo on separate lines', 'YoHi'], 'cout does not add spaces or new lines by itself.', 'cout << "Hi";\ncout << "Yo";'),
+  ],
+  typed: [
+    T('Syntax', 'Type the character that ends every C++ statement:', [';'], 'Statements end with a semicolon.'),
+    T('Namespaces', 'Type the name of the namespace that cout belongs to:', ['std'], 'cout is part of the std namespace.'),
+    T('Output', 'Type the operator used to send output to cout:', ['<<'], '<< inserts values into the output.'),
+    T('Libraries', 'Type the directive (with #) used to add a header library:', ['#include'], '#include adds a header file.'),
+  ],
+  gens: [
+    () => { const k = rnd(2, 6); const body = Array.from({ length: k }, (_, i) => `cout << "${String.fromCharCode(65 + i)}";`).join('\n'); return G('typed', 'Statements', 'How many statements are inside main(), not counting return 0;?', prog(body), { a: [String(k)], e: `Each line ending with ; is one statement, so there are ${k}.` }); },
+    () => { const ws = shuffle(['Red', 'Sun', 'Cat', 'Box', 'Map', 'Fox']).slice(0, 3); return G('typed', 'Statements', 'What is printed?', prog(ws.map(w => `cout << "${w}";`).join('\n')), { a: [ws.join('')], m: 'out', e: 'Statements run top to bottom, and cout adds no spaces, so the words join together.' }); },
+  ],
+};
 
-            <!-- Header Stats -->
-            <div class="flex items-center gap-3 sm:gap-6 text-sm">
-                <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60" title="Daily Streak">
-                    <span class="text-amber-500 text-base">🔥</span>
-                    <span id="stat-streak" class="font-bold text-amber-400">1</span>
-                    <span class="text-xs text-slate-400 hidden md:inline">Days</span>
-                </div>
+C[3] = {
+  cards: [
+    K('Printing text', 'Use cout with the << operator. Text must be inside double quotes.', null, 'cout << "Hello World!";'),
+    K('Multiple cout statements', 'You can use as many cout statements as you like. They do NOT start a new line automatically.', null, 'cout << "Hello World!";\ncout << "I am learning C++";\n// Output: Hello World!I am learning C++'),
+    K('Printing numbers', 'Numbers are printed without quotes.', null, 'cout << 3;\n// Output: 3'),
+    K('Printing calculations', 'Without quotes, C++ calculates the result. With quotes, it prints the text exactly.', null, 'cout << 3 + 3;    // 6\ncout << "3 + 3";  // 3 + 3'),
+    K('Chaining values', 'Use << several times to print text and numbers together.', null, 'cout << "I am " << 35 << " years old.";\n// I am 35 years old.'),
+    K('Forgot the quotes?', 'Text without quotes is treated as a name, which usually causes an error like "was not declared in this scope".'),
+  ],
+  typing: [
+    X('Print the text Hello:', ['cout << "Hello";'], 'Text goes inside double quotes.'),
+    X('Complete the statement so it prints 5:', ['<<'], '<< sends the value to cout.', 'cout __ 5;'),
+    X('Print the RESULT of 2 + 3 (let C++ calculate it):', ['cout << 2 + 3;'], 'No quotes, so C++ calculates 5.'),
+    X('What does this print?', ['2 + 3'], 'With quotes, the text is printed exactly.', 'cout << "2 + 3";', 'out'),
+  ],
+  mcq: [
+    M('Text', 'Text printed with cout must be written inside...', ['Double quotes " "', 'No quotes at all', 'Square brackets [ ]', 'Curly braces { }'], 'Text (a string) goes in double quotes.'),
+    M('Calculations', 'What is printed?', ['6', '3 + 3', '33', 'An error'], 'Without quotes C++ calculates 3 + 3.', 'cout << 3 + 3;'),
+    M('Calculations', 'What is printed?', ['3 + 3', '6', '33', 'An error'], 'With quotes it is just text.', 'cout << "3 + 3";'),
+    M('Multiple outputs', 'What is printed?', ['HelloWorld', 'Hello World', 'Hello and World on two lines', 'WorldHello'], 'cout never adds spaces or new lines by itself.', 'cout << "Hello";\ncout << "World";'),
+    M('Numbers', 'Which statement prints the number 42 correctly?', ['cout << 42;', 'cout << "42;', 'cout < 42;', 'cout >> 42;'], 'Numbers can be printed directly with <<.'),
+    M('Chaining', 'What is printed?', ['Age: 20', 'Age:20', 'Age: age', 'An error'], 'The space inside "Age: " is printed, then 20.', 'cout << "Age: " << 20;'),
+    M('Text', 'What happens if you forget the closing double quote?', ['The compiler reports an error', 'It prints normally', 'C++ adds the quote for you', 'It runs but prints nothing'], 'Unclosed text is a syntax error.'),
+    M('Calculations', 'What is printed?', ['20', '10 * 2', '102', '12'], '* means multiply.', 'cout << 10 * 2;'),
+    M('Chaining', 'Which operator chains several values in one cout?', ['<<', '+', ',', '&'], 'Repeat << for each value.'),
+    M('Text', 'What is printed?', ['55', '10', '5 5', 'An error'], 'Both are text, so they are placed side by side.', 'cout << "5" << "5";'),
+    M('Output', 'What does cout stand for?', ['Character output', 'Computer output', 'Count out', 'Console utility'], 'cout is pronounced "see-out": character output.'),
+    M('Calculations', 'What is printed?', ['5', '7 - 2', '72', '9'], '7 minus 2 is 5.', 'cout << 7 - 2;'),
+    M('Text', 'Which line has a syntax error?', ['cout << "Hi;', 'cout << "Hi";', 'cout << 5;', 'cout << 1 + 1;'], '"Hi; is missing its closing quote.'),
+    M('Chaining', 'Does cout add a space between chained values?', ['No, you must add spaces yourself', 'Yes, always', 'Only between numbers', 'Only between text'], 'Put spaces inside the quotes where you need them.'),
+  ],
+  typed: [
+    T('Calculations', 'What does this print?', ['8'], '4 + 4 is calculated because there are no quotes.', 'cout << 4 + 4;', 'out'),
+    T('Multiple outputs', 'What does this print?', ['HiThere'], 'No space is added between chained text.', 'cout << "Hi" << "There";', 'out'),
+    T('Chaining', 'What does this print?', ['x2'], '"x" then 2, with nothing in between.', 'cout << "x" << 2;', 'out'),
+    T('Output', 'Name the header library needed for cout:', ['iostream', '<iostream>'], 'cout comes from iostream.'),
+  ],
+  gens: [
+    () => { const a = rnd(2, 60), b = rnd(2, 60); return G('typed', 'Calculations', 'What does this print?', `cout << ${a} + ${b};`, { a: [String(a + b)], m: 'out', e: `No quotes, so C++ calculates ${a} + ${b} = ${a + b}.` }); },
+    () => { const a = rnd(2, 12), b = rnd(2, 12); return G('mcq', 'Calculations', 'What does this print?', `cout << ${a} * ${b};`, { o: numOpts(a * b, [a + b, `${a}${b}`, `${a} * ${b}`]), e: `* multiplies: ${a} × ${b} = ${a * b}.` }); },
+    () => { const w = pick(['Score', 'Level', 'Day', 'Room']), n = rnd(1, 99); return G('typed', 'Chaining', 'What does this print?', `cout << "${w}" << ${n};`, { a: [`${w}${n}`], m: 'out', e: 'There is no space inside the quotes, so the text and number touch.' }); },
+  ],
+};
 
-                <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60" title="Experience Points">
-                    <span class="text-yellow-400 text-base">⭐</span>
-                    <span id="stat-xp" class="font-bold text-yellow-300">0</span>
-                    <span class="text-xs text-slate-400 hidden md:inline">XP</span>
-                </div>
+C[4] = {
+  cards: [
+    K('New line with \\n', 'Put \\n inside the text to move to a new line.', null, 'cout << "Hello World!\\n";\ncout << "I am learning C++";'),
+    K('New line with endl', 'endl ("end line") also moves to a new line. It is NOT written in quotes.', null, 'cout << "Hello World!" << endl;\ncout << "I am learning C++";'),
+    K('\\n or endl?', 'Both create a new line. endl also flushes (empties) the output buffer, which makes it slightly slower, so \\n is used more often.'),
+    K('Blank lines', 'Two \\n characters in a row create a blank line.', null, 'cout << "Hello\\n\\n";\ncout << "World";'),
+    K('What is an escape sequence?', 'A backslash \\ followed by a character. Together they mean something special inside text.'),
+    K('Common escape sequences', '\\n  new line\n\\t  horizontal tab\n\\\\  backslash\n\\"  double quote', null, 'cout << "Name:\\tAli\\n";\ncout << "He said \\"Hi\\"";'),
+  ],
+  typing: [
+    X('Type the escape sequence that starts a new line:', ['\\n'], 'Backslash + n means new line.'),
+    X('Complete the statement so it ends the line:', ['endl'], 'endl ends the line and is not in quotes.', 'cout << "Hi" << ____;'),
+    X('Type the escape sequence for a double quote inside text:', ['\\"'], '\\" lets you put a quote inside a string.'),
+    X('Type the escape sequence for a tab:', ['\\t'], '\\t inserts a horizontal tab.'),
+  ],
+  mcq: [
+    M('New lines', 'What does \\n do inside text?', ['Starts a new line', 'Inserts a tab', 'Prints a backslash', 'Ends the program'], '\\n is the new line escape sequence.'),
+    M('New lines', 'What does endl do?', ['Ends the line (and flushes the output)', 'Ends the program', 'Ends a loop', 'Inserts a tab'], 'endl moves output to the next line.'),
+    M('New lines', 'What is printed?', ['A and B on separate lines', 'A\\nB', 'AB', 'A B'], '\\n moves B to the next line.', 'cout << "A\\nB";'),
+    M('New lines', 'Which creates a blank line between two lines of text?', ['\\n\\n', '\\t', '\\\\', '\\"'], 'Two new lines leave one empty line.'),
+    M('Escape sequences', 'What does \\t insert?', ['A horizontal tab', 'A new line', 'The letter t', 'A backspace'], '\\t is the tab escape sequence.'),
+    M('Escape sequences', 'How do you print one backslash \\ inside text?', ['\\\\', '\\', '/\\', '\\b'], 'A backslash must itself be escaped: \\\\'),
+    M('Escape sequences', 'How do you print a double quote inside text?', ['\\"', '""', '\\q', '/"'], '\\" prints a " character.'),
+    M('Escape sequences', 'Every escape sequence starts with which character?', ['\\ (backslash)', '/ (slash)', '#', '%'], 'Escape sequences begin with a backslash.'),
+    M('New lines', 'Which new-line option is used more often because it is slightly faster?', ['\\n', 'endl', 'They are always identical', 'Neither works'], 'endl also flushes the buffer, so \\n is usually preferred.'),
+    M('New lines', 'What is printed?', ['Hi and Bye on separate lines', 'HiBye', 'Hi endl Bye', 'An error'], 'endl ends the first line.', 'cout << "Hi" << endl << "Bye";'),
+    M('New lines', 'How is endl written in code?', ['cout << endl;  (no quotes)', 'cout << "endl";', "cout << 'endl';", 'cout << <endl>;'], 'endl is a manipulator, not text.'),
+    M('Escape sequences', 'What is printed?', ['Line1 and Line2 separated by a tab gap', 'Line1 and Line2 on separate lines', 'Line1\\tLine2', 'An error'], '\\t inserts a tab gap.', 'cout << "Line1\\tLine2";'),
+    M('Escape sequences', 'What is printed?', ['He said "Hi"', 'He said \\"Hi\\"', 'He said Hi', 'An error'], 'Each \\" prints a quote mark.', 'cout << "He said \\"Hi\\"";'),
+    M('New lines', 'How many lines of output does this produce?', ['3', '1', '2', '4'], 'Two \\n split the text into three lines.', 'cout << "a\\nb\\nc";'),
+  ],
+  typed: [
+    T('New lines', 'How many lines does this print?', ['2'], '\\n splits X and Y onto two lines.', 'cout << "X\\nY";'),
+    T('Escape sequences', 'Type the escape sequence that prints a backslash:', ['\\\\'], 'A backslash is written as \\\\'),
+    T('New lines', 'Type the manipulator (not in quotes) that ends a line:', ['endl', 'std::endl'], 'cout << endl; ends the line.'),
+    T('New lines', 'How many lines does this print?', ['2'], 'The "\\n" between them starts a second line.', 'cout << "A" << "\\n" << "B";'),
+  ],
+  gens: [
+    () => { const k = rnd(2, 5); const ws = shuffle(['one', 'two', 'sun', 'moon', 'tea', 'code', 'blue']).slice(0, k); return G('typed', 'New lines', 'How many lines of output does this produce?', `cout << "${ws.join('\\n')}";`, { a: [String(k)], e: `There are ${k - 1} \\n, which split the text into ${k} lines.` }); },
+    () => { const k = rnd(2, 4); const ps = shuffle(['Hi', 'Yes', 'Go', 'Up', 'OK']).slice(0, k); return G('mcq', 'New lines', 'How many lines of output does this produce?', `cout << ${ps.map(p => `"${p}"`).join(' << endl << ')};`, { o: numOpts(k, [k - 1, k + 1]), e: `endl appears ${k - 1} times, so the output has ${k} lines.` }); },
+  ],
+};
 
-                <div class="flex items-center gap-1.5 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60" title="Current Mastery Level">
-                    <span class="text-brand-400 text-base">🎯</span>
-                    <span class="text-xs text-slate-400 hidden md:inline">Lvl</span>
-                    <span id="stat-level" class="font-bold text-brand-400">1</span>
-                </div>
+C[5] = {
+  cards: [
+    K('What are comments?', 'Comments explain your code and make it easier to read. The compiler ignores them completely.'),
+    K('Single-line comments', 'Start with //. Everything after // on that line is ignored.', null, '// This is a comment\ncout << "Hello World!";'),
+    K('Comment at the end of a line', 'A // comment can come after code on the same line.', null, 'cout << "Hello World!"; // prints a greeting'),
+    K('Multi-line comments', 'Start with /* and end with */. Everything between them is ignored, even across many lines.', null, '/* The code below prints\n   the words Hello World! */\ncout << "Hello World!";'),
+    K('Commenting out code', 'Turning code into a comment stops it from running, which is handy when testing.', null, 'cout << "Shown";\n// cout << "Hidden";'),
+    K('Which kind should I use?', 'Use // for short notes and /* */ for longer explanations. Good comments explain WHY the code does something.'),
+  ],
+  typing: [
+    X('Type the symbols that start a single-line comment:', ['//'], '// starts a single-line comment.'),
+    X('Type the symbols that start a multi-line comment:', ['/*'], '/* opens a multi-line comment.'),
+    X('Type the symbols that end a multi-line comment:', ['*/'], '*/ closes a multi-line comment.'),
+    X('What does the compiler do with comments? (one word)', ['ignores', 'ignore', 'ignores them', 'skips', 'skips them'], 'Comments are ignored by the compiler.', null, 'word'),
+  ],
+  mcq: [
+    M('Comments', 'What does the compiler do with comments?', ['Ignores them', 'Prints them', 'Treats them as errors', 'Stores them as variables'], 'Comments are only for people reading the code.'),
+    M('Single-line', 'A single-line comment starts with...', ['//', '/*', '#', '--'], '// starts a single-line comment.'),
+    M('Multi-line', 'A multi-line comment is written as...', ['/* ... */', '// ... //', '<!-- ... -->', '{ ... }'], 'Use /* to open and */ to close.'),
+    M('Single-line', 'What is printed?', ['Nothing', 'Hi', '// cout << "Hi";', 'An error'], 'The whole line is a comment.', '// cout << "Hi";'),
+    M('Single-line', 'What is printed?', ['A', 'AB', 'B', 'Nothing'], 'Everything after // is ignored.', 'cout << "A"; // cout << "B";'),
+    M('Comments', 'What is the main purpose of comments?', ['To explain the code', 'To speed up the program', 'To store data', 'To connect to a database'], 'Comments document your code.'),
+    M('Multi-line', 'Can a /* */ comment cover several lines?', ['Yes', 'No', 'Only two lines', 'Only inside main()'], 'Multi-line comments can be any length.'),
+    M('Single-line', 'Which is a valid single-line comment?', ['// note', '/ note', '\\\\ note', '** note'], 'Only // starts a single-line comment.'),
+    M('Multi-line', 'What is printed?', ['Y', 'X', 'XY', 'Nothing'], 'The cout for X is inside a comment.', '/* cout << "X"; */ cout << "Y";'),
+    M('Commenting out', 'What does "commenting out" a line mean?', ['Turning code into a comment so it does not run', 'Deleting the line', 'Printing the line', 'Running the line twice'], 'It disables code without deleting it.'),
+    M('Single-line', 'Where can a // comment appear?', ['At the start of a line or after code', 'Only at the top of the file', 'Only inside main()', 'Only before #include'], '// can follow code on the same line.'),
+    M('Multi-line', 'Which symbols end a multi-line comment?', ['*/', '/*', '//', '\\*'], '*/ closes the comment.'),
+    M('Comments', 'Do comments make the finished program slower?', ['No, the compiler ignores them', 'Yes, a lot', 'Only multi-line comments', 'Only in loops'], 'Comments are not part of the compiled program.'),
+    M('Comments', 'Which is the most useful comment?', ['One that explains why the code does something', 'One that repeats every line in words', 'One that contains passwords', 'Random text'], 'Explain intent, not the obvious.'),
+  ],
+  typed: [
+    T('Single-line', 'What does this print?', ['Go'], 'The second cout is inside a comment.', 'cout << "Go"; // cout << "Stop";', 'out'),
+    T('Single-line', 'Type the symbols that start a single-line comment:', ['//'], '// starts a single-line comment.'),
+    T('Multi-line', 'What does this print?', ['2'], 'Only the second cout is outside the comment.', '/* cout << "1"; */ cout << "2";', 'out'),
+    T('Multi-line', 'Type the symbols that close a multi-line comment:', ['*/'], '*/ ends a multi-line comment.'),
+  ],
+  gens: [
+    () => { const ws = shuffle(['Ant', 'Bee', 'Cat', 'Dog', 'Elk', 'Fox']).slice(0, 4); const off = ws.map(() => Math.random() < .45); if (off.every(Boolean)) off[0] = false; const lines = ws.map((w, i) => (off[i] ? '// ' : '') + `cout << "${w}";`); const out = ws.filter((_, i) => !off[i]).join(''); return G('typed', 'Commenting out', 'What does this print?', lines.join('\n'), { a: [out], m: 'out', e: 'Lines starting with // are ignored; the others print with no spaces between them.' }); },
+    () => { const a = pick(['Yes', 'Up', 'Hot']), b = pick(['No', 'Down', 'Cold']); const first = Math.random() < .5; return G('mcq', 'Multi-line', 'What does this print?', first ? `/* cout << "${a}"; */\ncout << "${b}";` : `cout << "${a}";\n/* cout << "${b}"; */`, { o: [first ? b : a, first ? a : b, a + b, 'Nothing'], e: 'Code between /* and */ is ignored.' }); },
+  ],
+};
 
-                <!-- Supabase Cloud Sync Status -->
-                <button onclick="openSyncModal()" id="sync-badge" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded-full border border-slate-700 transition cursor-pointer" title="Cloud Sync Settings">
-                    <span id="sync-icon" class="w-2.5 h-2.5 rounded-full bg-slate-500"></span>
-                    <span id="sync-text" class="text-xs text-slate-300">Local Only</span>
-                </button>
-            </div>
-        </div>
-    </header>
+C[6] = {
+  cards: [
+    K('What is a variable?', 'A variable is a container that stores a data value, like a labelled box.'),
+    K('Common variable types', "int: whole numbers (123)\ndouble: decimals (19.99)\nchar: one character ('a')\nstring: text (\"Hello\")\nbool: true or false"),
+    K('Declaring a variable', 'Syntax: type name = value;', null, 'int myNum = 15;\ncout << myNum;  // 15'),
+    K('Declare now, assign later', 'You can create a variable first and give it a value later.', null, 'int myNum;\nmyNum = 15;'),
+    K('Overwriting a value', 'Assigning a new value replaces the old one.', null, 'int myNum = 15;\nmyNum = 10;\ncout << myNum;  // 10'),
+    K('Displaying variables', 'Combine text and variables with <<.', null, 'int myAge = 35;\ncout << "I am " << myAge << " years old.";'),
+    K('Adding variables', 'Use + to add number variables.', null, 'int x = 5;\nint y = 6;\ncout << x + y;  // 11'),
+  ],
+  typing: [
+    X('Declare an int named age with the value 20:', ['int age = 20;'], 'type name = value;'),
+    X('Type the keyword for whole numbers:', ['int'], 'int stores whole numbers.'),
+    X('Complete the declaration for a decimal price:', ['double'], 'double stores decimal numbers.', '_____ price = 9.99;'),
+    X('Type the keyword for text values:', ['string', 'std::string'], 'string stores text in double quotes.'),
+  ],
+  mcq: [
+    M('Variables', 'What is a variable?', ['A container that stores a data value', 'A function', 'A comment', 'A library'], 'Variables store data.'),
+    M('Types', 'Which type stores whole numbers like 123?', ['int', 'double', 'string', 'char'], 'int is for integers.'),
+    M('Types', 'Which type is best for 19.99?', ['double', 'int', 'char', 'bool'], 'double holds decimal numbers.'),
+    M('Types', 'Which type stores "Hello"?', ['string', 'char', 'int', 'bool'], 'Text in double quotes is a string.'),
+    M('Types', "Which type stores 'A'?", ['char', 'string', 'int', 'double'], 'A single character in single quotes is a char.'),
+    M('Types', 'Which type stores true or false?', ['bool', 'int', 'string', 'char'], 'bool is short for boolean.'),
+    M('Declaring', 'Which declaration is correct?', ['int x = 5;', 'x int = 5;', 'int = x 5;', 'int x == 5;'], 'Type, then name, then = value.'),
+    M('Declaring', 'In int x = 5; what does = do?', ['Assigns the value 5 to x', 'Checks whether x equals 5', 'Adds 5 to x', 'Prints x'], '= is the assignment operator.'),
+    M('Types', 'char values are written in...', ["Single quotes 'a'", 'Double quotes "a"', 'No quotes', 'Brackets [a]'], 'chars use single quotes.'),
+    M('Types', 'string values are written in...', ['Double quotes "hi"', "Single quotes 'hi'", 'No quotes', 'Parentheses (hi)'], 'Strings use double quotes.'),
+    M('Declaring', 'Can you declare a variable first and assign a value later?', ['Yes: int x; then x = 5;', 'No, never', 'Only for strings', 'Only inside comments'], 'Declaration and assignment can be separate.'),
+    M('Displaying', 'What is printed?', ['Age: 20', 'Age: age', 'Age:20', 'An error'], 'age is a variable, so its value is printed.', 'int age = 20;\ncout << "Age: " << age;'),
+    M('Types', 'Which type needs #include <string>?', ['string', 'int', 'char', 'bool'], 'string comes from the <string> library.'),
+    M('Variables', "Can a normal variable's value be changed later?", ['Yes, unless it is declared const', 'No, never', 'Only once', 'Only for strings'], 'Regular variables can be overwritten.'),
+  ],
+  typed: [
+    T('Overwriting', 'What does this print?', ['8'], 'The second assignment replaces 3 with 8.', 'int x = 3;\nx = 8;\ncout << x;', 'out'),
+    T('Types', 'Type the keyword for decimal numbers:', ['double'], 'double holds decimals.'),
+    T('Displaying', 'What does this print?', ['Hi Ali'], 'The text "Hi " includes a space, then the value of name.', 'string name = "Ali";\ncout << "Hi " << name;', 'out'),
+    T('Types', 'Type the keyword for a single character:', ['char'], 'char stores one character.'),
+  ],
+  gens: [
+    () => { const a = rnd(1, 50), b = rnd(51, 99); return G('typed', 'Overwriting', 'What does this print?', `int x = ${a};\nx = ${b};\ncout << x;`, { a: [String(b)], m: 'out', e: `x is overwritten: it changes from ${a} to ${b}.` }); },
+    () => { const a = rnd(2, 40), b = rnd(2, 40); return G('mcq', 'Variables', 'What does this print?', `int x = ${a};\nint y = ${b};\ncout << x + y;`, { o: numOpts(a + b, [`${a}${b}`, 'x + y', a * b]), e: `x + y = ${a} + ${b} = ${a + b}.` }); },
+    () => { const v = pick(['score', 'coins', 'points']), n = rnd(1, 500); return G('typed', 'Displaying', 'What does this print?', `int ${v} = ${n};\ncout << "Total: " << ${v};`, { a: [`Total: ${n}`], m: 'out', e: `The value ${n} is printed after the text "Total: ".` }); },
+  ],
+};
 
-    <!-- MAIN APP CONTAINER -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+C[7] = {
+  cards: [
+    K('Declare many variables at once', 'Use a comma-separated list for variables of the same type.', null, 'int x = 5, y = 6, z = 50;\ncout << x + y + z;  // 61'),
+    K('One value to many variables', 'Chain the = sign to give several variables the same value.', null, 'int x, y, z;\nx = y = z = 50;\ncout << x + y + z;  // 150'),
+    K('What is an identifier?', 'The unique name you give a variable, such as age or totalScore.'),
+    K('Identifier rules', '• letters, digits and underscores only\n• must start with a letter or _\n• case-sensitive (myVar ≠ myvar)\n• no spaces or symbols like ! # -\n• cannot be a reserved word like int'),
+    K('Use descriptive names', 'minutesPerHour is much clearer than m.', null, 'int minutesPerHour = 60;  // clear\nint m = 60;               // works, but unclear'),
+    K('Constants: const', 'const makes a variable read-only. Its value cannot change, and it must be set when declared.', null, 'const int minutesPerHour = 60;\nconst double PI = 3.14;'),
+    K('Changing a constant', 'Trying to change a const causes a compile error.', null, 'const int myNum = 15;\nmyNum = 10;  // error: assignment of read-only variable'),
+  ],
+  typing: [
+    X('Type the keyword that makes a variable unchangeable:', ['const'], 'const variables are read-only.'),
+    X('Declare three ints a = 1, b = 2, c = 3 in ONE statement:', ['int a = 1, b = 2, c = 3;'], 'One int, then the variables separated by commas.'),
+    X('Type the character that separates the variables in: int a = 1, b = 2;', [','], 'Commas separate the variables.'),
+    X('Declare a constant int named MAX with the value 100:', ['const int MAX = 100;'], 'const type name = value;'),
+  ],
+  mcq: [
+    M('Multiple variables', 'How do you declare several int variables in one line?', ['int x = 1, y = 2;', 'int x = 1; y = 2 int;', 'int x, = 1 y;', 'int(x, y) = 1, 2;'], 'One type, then a comma-separated list.'),
+    M('Identifiers', 'Which is a valid identifier?', ['myAge', '2age', 'my age', 'int'], 'It starts with a letter and has no spaces.'),
+    M('Identifiers', 'Which is a valid identifier?', ['_count', 'count!', '9lives', 'float'], 'Names may start with an underscore.'),
+    M('Identifiers', 'Are myVar and myvar the same variable?', ['No, identifiers are case-sensitive', 'Yes', 'Only if both are int', 'It causes an error'], 'Upper and lower case are different in C++.'),
+    M('Identifiers', 'Can you name a variable int?', ['No, it is a reserved word', 'Yes', 'Only inside main()', 'Only in capitals'], 'Keywords cannot be used as names.'),
+    M('Constants', 'What does const do?', ['Makes the value unchangeable', 'Makes the variable global', 'Makes the program faster', 'Prints the value automatically'], 'A const value is read-only.'),
+    M('Constants', 'What happens here?', ['A compile error', 'a becomes 10', 'a stays 5 silently', '10 is printed'], 'You cannot assign to a const variable.', 'const int a = 5;\na = 10;'),
+    M('Constants', 'Must a const variable get its value when it is declared?', ['Yes', 'No', 'Only strings', 'Only int'], 'const int x; on its own is an error.'),
+    M('Multiple variables', 'What is printed?', ['21', '7', '777', 'An error'], 'All three are 7, and 7 + 7 + 7 = 21.', 'int x, y, z;\nx = y = z = 7;\ncout << x + y + z;'),
+    M('Identifiers', 'Which is the clearest variable name?', ['minutesPerHour', 'm', 'x1', 'a'], 'Descriptive names are easier to understand.'),
+    M('Identifiers', 'An identifier can begin with...', ['A letter or an underscore', 'A digit', 'A space', 'A hyphen'], 'Digits are allowed, but not at the start.'),
+    M('Identifiers', 'Which characters are allowed in identifiers?', ['Letters, digits and underscores', 'Spaces', 'Hyphens', '@ symbols'], 'Only letters, digits and _'),
+    M('Constants', 'Which is a correct constant declaration?', ['const double PI = 3.14159;', 'const PI;', 'double const = PI;', 'constant PI = 3.14;'], 'const type name = value;'),
+    M('Multiple variables', 'What is printed?', ['6', '5', '23', 'An error'], '2 * 3 = 6.', 'int a = 2, b = 3;\ncout << a * b;'),
+  ],
+  typed: [
+    T('Constants', 'Type the keyword used to create a constant:', ['const'], 'const makes a variable read-only.'),
+    T('Identifiers', 'Is my-age a valid identifier? (yes or no)', ['no'], 'Hyphens are not allowed in names.', null, 'word'),
+    T('Multiple variables', 'What does this print?', ['8'], 'a and b are both 4.', 'int a, b;\na = b = 4;\ncout << a + b;', 'out'),
+    T('Identifiers', 'Besides letters and digits, which character is allowed in identifiers?', ['_'], 'The underscore _ is allowed.'),
+  ],
+  gens: [
+    () => { const a = rnd(1, 30), b = rnd(1, 30), c = rnd(1, 30); return G('typed', 'Multiple variables', 'What does this print?', `int x = ${a}, y = ${b}, z = ${c};\ncout << x + y + z;`, { a: [String(a + b + c)], m: 'out', e: `${a} + ${b} + ${c} = ${a + b + c}.` }); },
+    () => { const n = rnd(2, 40); return G('mcq', 'Multiple variables', 'What does this print?', `int x, y, z;\nx = y = z = ${n};\ncout << x + y + z;`, { o: numOpts(3 * n, [n, `${n}${n}${n}`, 2 * n]), e: `All three variables are ${n}, so the sum is ${3 * n}.` }); },
+    () => { const ok = pick(['myAge', '_count', 'totalScore', 'x2', 'student_name', 'MAX_SIZE']); const bad = shuffle(['2fast', 'my age', 'total-score', 'int', 'first.name', '#count', 'return', 'big!']).slice(0, 3); return G('mcq', 'Identifiers', 'Which is a valid identifier?', null, { o: [ok, ...bad], e: `${ok} uses only letters, digits or _ and does not start with a digit.` }); },
+  ],
+};
 
-        <!-- LEFT SIDEBAR / DASHBOARD METRICS -->
-        <aside class="lg:col-span-1 flex flex-col gap-5">
-            
-            <!-- User Progress Overview Card -->
-            <div class="bg-cardbg rounded-2xl p-5 border border-borderbg shadow-xl">
-                <div class="flex items-center gap-3 mb-4">
-                    <div id="user-avatar" class="w-12 h-12 rounded-full bg-accent-600 flex items-center justify-center font-bold text-xl ring-2 ring-accent-500/50">
-                        C
-                    </div>
-                    <div>
-                        <h2 id="user-name" class="font-bold text-slate-100">Learner</h2>
-                        <span id="user-rank" class="text-xs px-2 py-0.5 rounded-full bg-brand-900/60 text-brand-400 border border-brand-700/50 font-medium">C++ Novice</span>
-                    </div>
-                </div>
+const CONTENT_MAX = Math.max(...Object.keys(C).map(Number));
 
-                <div class="space-y-4">
-                    <div>
-                        <div class="flex justify-between text-xs mb-1.5 font-medium">
-                            <span class="text-slate-400">Curriculum Progress</span>
-                            <span id="progress-percent" class="text-brand-400 font-bold">0%</span>
-                        </div>
-                        <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden p-0.5 border border-slate-800">
-                            <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-brand-500 to-accent-500 rounded-full transition-all duration-500" style="width: 0%"></div>
-                        </div>
-                    </div>
+// =====================================================================
+// 5. LEARNER STATE + MERGING (so an old device never overwrites newer progress)
+// =====================================================================
+const blank = () => ({ v: 1, completed: {}, best: {}, seen: {}, attempts: [], wrong: [], wrongCleared: 0, daily: {}, resume: null });
+function normState(s) { const b = blank(); if (!s || typeof s !== 'object') return b; for (const k in b) if (s[k] !== undefined && s[k] !== null) b[k] = s[k]; if (s.resume) b.resume = s.resume; return b; }
+const keysOf = (a, b) => new Set([...Object.keys(a), ...Object.keys(b)]);
+function merge(a, b) {
+  a = normState(a); b = normState(b); const m = blank();
+  m.completed = { ...a.completed, ...b.completed };                                     // completed on either device = completed
+  for (const k of keysOf(a.best, b.best)) m.best[k] = Math.max(a.best[k] ?? 0, b.best[k] ?? 0);  // keep best score
+  for (const k of keysOf(a.seen, b.seen)) {                                             // question history per level
+    const x = a.seen[k] || { r: 0, ids: [] }, y = b.seen[k] || { r: 0, ids: [] };
+    m.seen[k] = x.r > y.r ? x : y.r > x.r ? y : { r: x.r, ids: [...new Set([...x.ids, ...y.ids])] };
+  }
+  const at = new Map(); [...a.attempts, ...b.attempts].forEach(t => at.set(t.id, t));
+  m.attempts = [...at.values()].sort((p, q) => p.d - q.d).slice(-300);
+  m.wrongCleared = Math.max(a.wrongCleared, b.wrongCleared);
+  const wr = new Map(); [...a.wrong, ...b.wrong].forEach(w => wr.set(w.id + '|' + w.d, w));
+  m.wrong = [...wr.values()].filter(w => w.d > m.wrongCleared).sort((p, q) => p.d - q.d).slice(-50);
+  for (const k of keysOf(a.daily, b.daily)) m.daily[k] = Math.max(a.daily[k] || 0, b.daily[k] || 0);  // learning seconds per day
+  m.resume = ((a.resume?.t || 0) >= (b.resume?.t || 0)) ? a.resume : b.resume;          // most recent resume point
+  return m;
+}
+const totalSecs = () => Object.values(S.daily).reduce((x, y) => x + y, 0);
+function streak() {
+  const d = new Date(); if (!(S.daily[dayKey(d)] > 0)) d.setDate(d.getDate() - 1);
+  let n = 0; while (S.daily[dayKey(d)] > 0) { n++; d.setDate(d.getDate() - 1); } return n;
+}
+function currentLevel() { for (let n = 1; n <= TOTAL_LEVELS; n++) if (!S.completed[n]) return n; return TOTAL_LEVELS; }
+function levelStatus(n) { if (S.completed[n]) return 'done'; if (n === currentLevel()) return C[n] ? 'cur' : 'soon'; return n > CONTENT_MAX && n < currentLevel() ? 'soon' : 'lock'; }
 
-                    <div class="grid grid-cols-2 gap-2 text-center text-xs pt-2 border-t border-slate-700/50">
-                        <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                            <p class="text-slate-400">Completed</p>
-                            <p id="stat-completed" class="text-lg font-bold text-slate-100">0/84</p>
-                        </div>
-                        <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-800">
-                            <p class="text-slate-400">Total Time</p>
-                            <p id="stat-time" class="text-lg font-bold text-slate-100">0m</p>
-                        </div>
-                    </div>
+// =====================================================================
+// 6. SUPABASE: LOGIN + CLOUD SYNC
+// =====================================================================
+const configured = !SUPABASE_URL.includes('YOUR-PROJECT') && !SUPABASE_KEY.includes('YOUR-');
+let db = null;   // created in boot() once the Supabase library has loaded
+let S = blank(), user = null, mode = 'auth', LS = null, Q = null;
+let saveTimer = null, pushing = false, pendingSync = false;
 
-                    <button onclick="startCurrentLesson()" class="w-full py-3 px-4 bg-gradient-to-r from-brand-600 to-brand-500 hover:from-brand-500 hover:to-brand-400 text-white font-bold rounded-xl shadow-lg shadow-brand-600/20 transition transform active:scale-95 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-play"></i>
-                        <span>Continue Learning</span>
-                    </button>
-                </div>
-            </div>
+const lsKey = () => 'cppmaster_' + user.id;
+function saveLocal() { try { localStorage.setItem(lsKey(), JSON.stringify(S)); } catch (e) {} }
+function loadLocal() { try { return JSON.parse(localStorage.getItem(lsKey()) || 'null'); } catch (e) { return null; } }
+function setSync(s) { $('sync').textContent = { ok: '☁ Synced', saving: '⟳ Saving…', offline: '⚠ Offline – will sync later', err: '⚠ Sync problem – retrying' }[s] || ''; }
+function scheduleSave(now) { if (!user) return; saveLocal(); clearTimeout(saveTimer); saveTimer = setTimeout(cloudPush, now ? 0 : 1500); }
 
-            <!-- Tab Navigation Sidebar -->
-            <nav class="bg-cardbg rounded-2xl p-2 border border-borderbg space-y-1">
-                <button onclick="switchTab('roadmap')" id="nav-roadmap" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-brand-500/10 text-brand-400 border border-brand-500/30">
-                    <i class="fa-solid fa-map text-lg w-5"></i>
-                    <span>12-Week Roadmap</span>
-                </button>
-                <button onclick="switchTab('review')" id="nav-review" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800 hover:text-slate-200">
-                    <i class="fa-solid fa-rotate-left text-lg w-5"></i>
-                    <span>Review Mistakes</span>
-                    <span id="mistake-count-badge" class="ml-auto bg-rose-500/20 text-rose-400 text-xs px-2 py-0.5 rounded-full font-bold hidden">0</span>
-                </button>
-                <button onclick="switchTab('docs')" id="nav-docs" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800 hover:text-slate-200">
-                    <i class="fa-solid fa-book text-lg w-5"></i>
-                    <span>Setup & Deploy Guide</span>
-                </button>
-                <button onclick="switchTab('schema')" id="nav-schema" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800 hover:text-slate-200">
-                    <i class="fa-solid fa-database text-lg w-5"></i>
-                    <span>Supabase SQL Schema</span>
-                </button>
-            </nav>
+async function cloudPush() {
+  if (!user) return;
+  if (pushing) { pendingSync = true; return; }
+  if (!navigator.onLine) { pendingSync = true; setSync('offline'); return; }
+  pushing = true; pendingSync = false; setSync('saving'); let failed = false;
+  try {
+    // Read the cloud copy first and merge, so we never overwrite newer progress from another device
+    const { data, error } = await db.from('learner_state').select('data').eq('user_id', user.id).maybeSingle();
+    if (error) throw error;
+    if (data && data.data) S = merge(S, data.data);
+    const res = await db.from('learner_state').upsert({ user_id: user.id, data: S, updated_at: new Date().toISOString() });
+    if (res.error) throw res.error;
+    saveLocal(); setSync('ok');
+  } catch (e) { console.error('Sync failed:', e); failed = true; pendingSync = true; setSync(navigator.onLine ? 'err' : 'offline'); }
+  finally { pushing = false; if (pendingSync && navigator.onLine) setTimeout(cloudPush, failed ? 15000 : 500); }
+}
+window.addEventListener('online', () => user && cloudPush());
+document.addEventListener('visibilitychange', async () => { if (!document.hidden && user && !pushing) { await cloudPush(); if (mode === 'dash') renderDash(); } });
 
-            <!-- Quick Tip Card -->
-            <div class="bg-gradient-to-br from-indigo-900/40 to-slate-900 p-4 rounded-2xl border border-indigo-500/20">
-                <div class="flex items-center gap-2 text-indigo-400 font-bold text-xs mb-1">
-                    <i class="fa-solid fa-lightbulb"></i>
-                    <span>SOLO-LEARN PRO TIP</span>
-                </div>
-                <p class="text-xs text-slate-300 leading-relaxed">
-                    Dedicate 30 minutes daily: 15 minutes of flashcards/typing and 15 minutes of quiz assessment to maximize C++ memory retention!
-                </p>
-            </div>
-        </aside>
+async function onUser(u) {
+  user = u; $('logoutBtn').classList.toggle('hidden', !u);
+  if (!u) { S = blank(); setSync(''); renderAuth(); return; }
+  S = normState(loadLocal());
+  if (recovering) renderNewPassword(); else renderDash();   // show cached progress instantly
+  await cloudPush();                                   // then merge with the cloud copy
+  if (mode === 'dash') renderDash();
+}
+async function logout() { await cloudPush(); await db.auth.signOut(); }
 
-        <!-- CENTER DISPLAY CONTENT AREA -->
-        <section class="lg:col-span-3 flex flex-col">
+function renderAuth(msg = '', cls = '') {
+  mode = 'auth';
+  main.innerHTML = `<div class="card" style="max-width:420px;margin:30px auto">
+    <h1>Learn C++ in 12 weeks</h1>
+    <p class="muted">30 minutes a day: 15 min learning + a 15-question quiz. Log in to save your progress across devices.</p>
+    ${configured ? `
+    <label for="email">Email</label><input id="email" type="email" autocomplete="email" placeholder="you@example.com">
+    <label for="password">Password (at least 6 characters)</label><input id="password" type="password" autocomplete="current-password">
+    <button class="full" onclick="login()">Log in</button>
+    <button class="full sec" onclick="signup()">Create account</button>
+    <button class="full sec" style="background:none;color:var(--blue);margin-top:4px" onclick="forgotPassword()">Forgot password?</button>` :
+    `<p class="err">Supabase is not set up yet. Open index.html and paste your Project URL and publishable key at the top of the script.</p>`}
+    <div id="authMsg" class="msg ${cls}">${esc(msg)}</div></div>`;
+}
+const netHelp = m => /fetch|network|load failed/i.test(m)
+  ? m + ' — the browser could not reach Supabase. An ad blocker, privacy extension or strict tracking protection may be blocking supabase.co. Turn it off for this site and try again.'
+  : m;
+async function login() {
+  const { error } = await db.auth.signInWithPassword({ email: $('email').value.trim(), password: $('password').value });
+  if (error) { $('authMsg').className = 'msg err'; $('authMsg').textContent = netHelp(error.message); }
+}
+// ----- Forgot password: email a reset link, then let the user choose a new password -----
+let recovering = /type=recovery/.test(location.hash);   // true when the user arrives from the reset email
+async function forgotPassword() {
+  const email = $('email').value.trim(), el = $('authMsg');
+  if (!email) { el.className = 'msg err'; el.textContent = 'Type your email address above first, then click "Forgot password?" again.'; return; }
+  const { error } = await db.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  if (error) { el.className = 'msg err'; el.textContent = netHelp(error.message); return; }
+  el.className = 'msg okc'; el.textContent = 'If an account exists for ' + email + ', a password reset link has been sent. Check your inbox (and spam folder).';
+}
+function renderNewPassword(msg = '', cls = '') {
+  mode = 'reset';
+  main.innerHTML = `<div class="card" style="max-width:420px;margin:30px auto">
+    <h1>Choose a new password</h1><p class="muted">For ${esc(user ? user.email : '')}</p>
+    <label for="pw1">New password (at least 6 characters)</label><input id="pw1" type="password" autocomplete="new-password">
+    <label for="pw2">Type it again</label><input id="pw2" type="password" autocomplete="new-password">
+    <button class="full" onclick="saveNewPassword()">Save new password</button>
+    <div id="authMsg" class="msg ${cls}">${esc(msg)}</div></div>`;
+}
+async function saveNewPassword() {
+  const p1 = $('pw1').value, p2 = $('pw2').value;
+  if (p1.length < 6) return renderNewPassword('The password must be at least 6 characters.', 'err');
+  if (p1 !== p2) return renderNewPassword('The two passwords do not match.', 'err');
+  const { error } = await db.auth.updateUser({ password: p1 });
+  if (error) return renderNewPassword(netHelp(error.message), 'err');
+  recovering = false; history.replaceState(null, '', location.pathname);
+  renderDash(); alert('Your password has been changed. Use the new password next time you log in.');
+}
 
-            <!-- MAIN VIEW CONTAINER -->
-            <div id="main-view-container" class="bg-cardbg rounded-2xl border border-borderbg p-4 sm:p-6 shadow-xl flex-1 flex flex-col">
-                
-                <!-- TAB 1: 12-WEEK ROADMAP VIEW -->
-                <div id="tab-roadmap-content" class="space-y-6">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-700/60 pb-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-route text-brand-400"></i> C++ Curriculum Roadmap
-                            </h2>
-                            <p class="text-xs text-slate-400 mt-1">84 Bite-sized modules designed across 12 structured learning weeks.</p>
-                        </div>
-                        <!-- Week Filter Dropdown -->
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs text-slate-400 font-medium">Filter:</label>
-                            <select id="week-filter" onchange="renderRoadmap()" class="bg-slate-900 text-xs text-slate-200 border border-slate-700 rounded-xl px-3 py-2 outline-none focus:border-brand-500">
-                                <option value="all">All 12 Weeks (Levels 1-84)</option>
-                                <option value="1">Week 1: Fundamentals & Basics</option>
-                                <option value="2">Week 2: Data Types & Input</option>
-                                <option value="3">Week 3: Operators & Strings</option>
-                                <option value="4">Week 4: Math & Booleans</option>
-                                <option value="5">Week 5: Conditionals & Switches</option>
-                                <option value="6">Week 6: Loops & Break/Continue</option>
-                                <option value="7">Week 7: Arrays & Vector Intro</option>
-                                <option value="8">Week 8: Structures & References</option>
-                                <option value="9">Week 9: Pointers & Memory</option>
-                                <option value="10">Week 10: Functions & Scope</option>
-                                <option value="11">Week 11: OOP & Classes</option>
-                                <option value="12">Week 12: Files & Exceptions</option>
-                            </select>
-                        </div>
-                    </div>
+async function signup() {
+  const { data, error } = await db.auth.signUp({ email: $('email').value.trim(), password: $('password').value, options: { emailRedirectTo: location.origin + location.pathname } });
+  const el = $('authMsg');
+  if (error) { el.className = 'msg err'; el.textContent = netHelp(error.message); }
+  else if (!data.session) { el.className = 'msg okc'; el.textContent = 'Account created! Check your email, click the confirmation link, then log in.'; }
+}
 
-                    <!-- Dynamic Roadmap Container -->
-                    <div id="roadmap-tree-container" class="space-y-8">
-                        <!-- Dynamically populated by JS -->
-                    </div>
-                </div>
+// =====================================================================
+// 7. DASHBOARD
+// =====================================================================
+function renderDash() {
+  mode = 'dash'; window.scrollTo(0, 0);
+  const cur = currentLevel(), done = Object.keys(S.completed).length, pct = Math.round(done / TOTAL_LEVELS * 100);
+  const todaySecs = S.daily[today()] || 0, last = S.attempts[S.attempts.length - 1];
+  const r = S.resume && !S.resume.done && C[S.resume.n] ? S.resume : null;
+  const canGo = r || C[cur];
+  const label = r ? `Resume Level ${r.n}: ${LEVELS[r.n - 1]}` : C[cur] ? `Start Level ${cur}: ${LEVELS[cur - 1]}` : `Level ${cur} is coming soon`;
+  const name = esc(user.email.split('@')[0]);
 
-                <!-- TAB 2: REVIEW MISTAKES VIEW -->
-                <div id="tab-review-content" class="hidden space-y-4">
-                    <div class="border-b border-slate-700/60 pb-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-circle-exclamation text-rose-400"></i> Weak Topics & Missed Questions
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-1">Review questions you answered incorrectly during previous quiz sessions.</p>
-                    </div>
+  let weeks = '';
+  for (let w = 1; w <= 12; w++) {
+    let btns = '';
+    for (let n = (w - 1) * 7 + 1; n <= w * 7; n++) {
+      const st = levelStatus(n), icon = { done: '✅', cur: '▶️', lock: '🔒', soon: '⏳' }[st];
+      const extra = st === 'done' ? ` · best ${S.best[n] ?? 0}%` : st === 'soon' ? ' · coming soon' : '';
+      btns += `<button class="lv ${st}" ${st === 'done' || st === 'cur' ? `onclick="openLevel(${n})"` : 'disabled'}><b>${icon} Day ${n}${extra}</b>${esc(LEVELS[n - 1])}</button>`;
+    }
+    weeks += `<h3>Week ${w}</h3><div class="levels">${btns}</div>`;
+  }
 
-                    <div id="review-list" class="space-y-4">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
+  const wrong = S.wrong.slice(-10).reverse();
+  const review = wrong.length ? wrong.map(w => `<div class="rev"><div class="muted">Level ${w.n} · ${esc(LEVELS[w.n - 1])}</div>
+      <div><b>${esc(w.q)}</b></div>${codeBlock(w.code)}
+      <div>Your answer: <code>${esc(w.given || '(blank)')}</code></div>
+      <div>Correct answer: <code>${esc(w.ans)}</code></div><div class="muted">${esc(w.e)}</div></div>`).join('')
+    + `<button class="sec small" style="margin-top:8px" onclick="clearWrong()">Clear this list</button>`
+    : '<p class="muted">No incorrect answers to review. Nice work!</p>';
 
-                <!-- TAB 3: DOCUMENTATION & DEPLOYMENT GUIDE -->
-                <div id="tab-docs-content" class="hidden space-y-6 text-slate-300 text-sm">
-                    <div class="border-b border-slate-700/60 pb-4">
-                        <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                            <i class="fa-solid fa-book-bookmark text-indigo-400"></i> Step-by-Step Deployment & Setup Guide
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-1">Complete beginner guide to running, hosting, and connecting Supabase cloud backend for free.</p>
-                    </div>
-
-                    <!-- Accordion Stage 1 -->
-                    <details class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 group" open>
-                        <summary class="font-bold text-white cursor-pointer flex justify-between items-center group-open:text-brand-400">
-                            <span>Stage 1: Software & Prerequisites Preparation</span>
-                            <i class="fa-solid fa-chevron-down text-xs transition group-open:rotate-180"></i>
-                        </summary>
-                        <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
-                            <p><strong class="text-slate-200">1. Install VS Code:</strong> Download Visual Studio Code from <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">code.visualstudio.com</code>.</p>
-                            <p><strong class="text-slate-200">2. Free Accounts Needed:</strong> Register free accounts at <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">github.com</code> and <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">supabase.com</code>.</p>
-                            <p><strong class="text-slate-200">3. Local Runner:</strong> Install the VS Code extension <em>"Live Server"</em> to launch this HTML application locally with one click.</p>
-                        </div>
-                    </details>
-
-                    <!-- Accordion Stage 2 -->
-                    <details class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 group">
-                        <summary class="font-bold text-white cursor-pointer flex justify-between items-center group-open:text-brand-400">
-                            <span>Stage 2: Code Structure & Single-File Architecture</span>
-                            <i class="fa-solid fa-chevron-down text-xs transition group-open:rotate-180"></i>
-                        </summary>
-                        <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
-                            <p>This web application consolidates HTML markup, Tailwind CSS styling, FontAwesome vector iconography, Web Audio API sound synthesis, local storage state managers, and REST API sync triggers into a single optimized web file (<code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">index.html</code>).</p>
-                        </div>
-                    </details>
-
-                    <!-- Accordion Stage 3 -->
-                    <details class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 group">
-                        <summary class="font-bold text-white cursor-pointer flex justify-between items-center group-open:text-brand-400">
-                            <span>Stage 3: GitHub Hosting Integration</span>
-                            <i class="fa-solid fa-chevron-down text-xs transition group-open:rotate-180"></i>
-                        </summary>
-                        <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
-                            <ol class="list-decimal list-inside space-y-1">
-                                <li>Create a new public repository on GitHub named <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">cpp-master-app</code>.</li>
-                                <li>Upload this <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">index.html</code> file to the root of your repository.</li>
-                                <li>Navigate to <strong>Settings &gt; Pages</strong> in your GitHub repository.</li>
-                                <li>Under <em>Build and Deployment</em>, select Source as <strong>Deploy from a branch</strong> and choose <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">main / root</code>.</li>
-                                <li>Click <strong>Save</strong>. GitHub Pages will issue a free URL (e.g. <code class="bg-slate-800 px-1 py-0.5 rounded text-amber-300">https://yourname.github.io/cpp-master-app</code>).</li>
-                            </ol>
-                        </div>
-                    </details>
-
-                    <!-- Accordion Stage 4 -->
-                    <details class="bg-slate-900/60 border border-slate-800 rounded-xl p-4 group">
-                        <summary class="font-bold text-white cursor-pointer flex justify-between items-center group-open:text-brand-400">
-                            <span>Stage 4: Supabase Database Cloud Sync</span>
-                            <i class="fa-solid fa-chevron-down text-xs transition group-open:rotate-180"></i>
-                        </summary>
-                        <div class="mt-3 space-y-2 text-xs leading-relaxed text-slate-400">
-                            <p>1. Log into your Supabase Dashboard and click <strong>New Project</strong>.</p>
-                            <p>2. Go to the <strong>SQL Editor</strong> tab inside Supabase, paste the DDL script found in the <em>"Supabase SQL Schema"</em> tab of this app, and click <strong>Run</strong>.</p>
-                            <p>3. Go to <strong>Project Settings &gt; API</strong> to copy your <strong>Project URL</strong> and <strong>anon key</strong>.</p>
-                            <p>4. Click the <em>"Local Only / Cloud Sync"</em> button in the top navigation bar of this site and paste your credentials to enable cloud persistence.</p>
-                        </div>
-                    </details>
-                </div>
-
-                <!-- TAB 4: SUPABASE SQL SCHEMA -->
-                <div id="tab-schema-content" class="hidden space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-700/60 pb-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-                                <i class="fa-solid fa-database text-accent-400"></i> Supabase SQL Setup DDL
-                            </h2>
-                            <p class="text-xs text-slate-400 mt-1">Copy and execute this SQL script in your Supabase SQL Editor to establish backend tables and RLS security policies.</p>
-                        </div>
-                        <button onclick="copySqlSchema()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 rounded-xl transition flex items-center gap-2">
-                            <i class="fa-solid fa-copy"></i>
-                            <span id="copy-sql-btn-text">Copy SQL</span>
-                        </button>
-                    </div>
-
-                    <pre id="sql-schema-block" class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs font-mono text-emerald-400 overflow-x-auto leading-relaxed">
--- 1. Create User Learning Profiles Table
-CREATE TABLE IF NOT EXISTS public.user_profiles (
-    user_id UUID PRIMARY KEY DEFAULT auth.uid(),
-    user_name TEXT DEFAULT 'Learner',
-    current_level INT DEFAULT 1,
-    xp INT DEFAULT 0,
-    streak INT DEFAULT 1,
-    total_time_mins INT DEFAULT 0,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 2. Create Lesson Completion Logs Table
-CREATE TABLE IF NOT EXISTS public.lesson_progress (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES public.user_profiles(user_id) ON DELETE CASCADE,
-    level_id INT NOT NULL,
-    score INT NOT NULL,
-    completed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    UNIQUE(user_id, level_id)
-);
-
--- 3. Enable Row Level Security (RLS)
-ALTER TABLE public.user_profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.lesson_progress ENABLE ROW LEVEL SECURITY;
-
--- 4. RLS Security Policies
-CREATE POLICY "Allow individual read own profile" ON public.user_profiles
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Allow individual write own profile" ON public.user_profiles
-    FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Allow individual read own progress" ON public.lesson_progress
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Allow individual write own progress" ON public.lesson_progress
-    FOR ALL USING (auth.uid() = user_id);
-                    </pre>
-                </div>
-
-                <!-- SESSION ACTIVE WORKSPACE VIEW (Flashcards / Typing / Quiz) -->
-                <div id="tab-session-content" class="hidden flex-1 flex flex-col justify-between space-y-6">
-                    
-                    <!-- Session Header Bar -->
-                    <div class="flex items-center justify-between border-b border-slate-700/60 pb-3">
-                        <div class="flex items-center gap-3">
-                            <button onclick="exitSession()" class="text-slate-400 hover:text-white transition text-sm">
-                                <i class="fa-solid fa-arrow-left"></i> Exit
-                            </button>
-                            <span class="text-slate-600">|</span>
-                            <span id="session-title" class="font-bold text-white text-sm sm:text-base">Level 1: C++ Syntax Basics</span>
-                        </div>
-                        
-                        <!-- 15-Minute Countdown Timer -->
-                        <div class="flex items-center gap-2 bg-slate-900/80 px-3 py-1 rounded-full border border-slate-800 text-xs font-mono text-amber-400">
-                            <i class="fa-regular fa-clock"></i>
-                            <span id="session-timer-display">15:00</span>
-                        </div>
-                    </div>
-
-                    <!-- MODE 1: FLASHCARD CONTAINER -->
-                    <div id="flashcard-workspace" class="hidden flex-1 flex flex-col items-center justify-center py-4">
-                        <div class="w-full max-w-xl perspective-1000">
-                            <div id="flashcard-element" onclick="flipFlashcard()" class="w-full min-h-[280px] bg-slate-900 border-2 border-brand-500/30 hover:border-brand-500/60 rounded-2xl p-6 shadow-2xl cursor-pointer transition-transform duration-500 transform-style-3d relative flex flex-col justify-between">
-                                
-                                <!-- Card Front -->
-                                <div id="card-front" class="backface-hidden flex flex-col justify-between h-full">
-                                    <div>
-                                        <div class="flex justify-between items-center text-xs text-brand-400 font-bold mb-3">
-                                            <span>CONCEPT FLASHCARD</span>
-                                            <span class="text-slate-500"><i class="fa-solid fa-rotate"></i> Click to Flip</span>
-                                        </div>
-                                        <h3 id="card-question" class="text-lg font-bold text-white mb-3">What is the correct syntax to output "Hello World" in C++?</h3>
-                                        <div id="card-front-code-container" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 hidden">
-                                            <code id="card-front-code">// C++ Output Snippet</code>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-slate-400 mt-4 text-center">Tap card to reveal detailed breakdown & code explanation</p>
-                                </div>
-
-                                <!-- Card Back -->
-                                <div id="card-back" class="absolute inset-0 p-6 bg-slate-900 border-2 border-accent-500/50 rounded-2xl backface-hidden rotate-y-180 flex flex-col justify-between">
-                                    <div>
-                                        <div class="flex justify-between items-center text-xs text-accent-400 font-bold mb-2">
-                                            <span>EXPLANATION & SOLUTION</span>
-                                            <span class="text-slate-500"><i class="fa-solid fa-rotate"></i> Click to Flip</span>
-                                        </div>
-                                        <p id="card-answer" class="text-sm text-slate-200 leading-relaxed mb-3">We use std::cout together with the insertion operator (&lt;&lt;) to print text.</p>
-                                        <div id="card-back-code-container" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-accent-300">
-                                            <pre id="card-back-code">std::cout &lt;&lt; "Hello World!";</pre>
-                                        </div>
-                                    </div>
-                                    <span class="text-xs text-slate-500 text-center">Card flipped</span>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <!-- Card Controls -->
-                        <div class="flex items-center gap-4 mt-6">
-                            <button onclick="prevFlashcard()" id="btn-prev-card" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold rounded-xl text-xs transition">
-                                <i class="fa-solid fa-chevron-left mr-1"></i> Previous
-                            </button>
-                            <span id="card-counter" class="text-xs font-mono text-slate-400">1 / 3</span>
-                            <button onclick="nextFlashcard()" id="btn-next-card" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-semibold rounded-xl text-xs transition">
-                                Next <i class="fa-solid fa-chevron-right ml-1"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- MODE 2: TYPING & CODE COMPLETION WORKSPACE -->
-                    <div id="typing-workspace" class="hidden flex-1 flex flex-col justify-between space-y-4">
-                        <div>
-                            <div class="flex justify-between items-center mb-2">
-                                <h3 id="typing-instruction" class="text-sm font-bold text-slate-200">Fill in the missing C++ syntax to complete the main function:</h3>
-                                <span class="text-xs text-brand-400 font-mono">Simulated CodeEditor UI</span>
-                            </div>
-                            
-                            <!-- Mock Code Mirror / Monaco Editor Box -->
-                            <div class="bg-slate-950 rounded-xl border border-slate-800 p-4 font-mono text-sm leading-relaxed shadow-inner">
-                                <div class="flex gap-2 text-xs text-slate-600 border-b border-slate-800/80 pb-2 mb-3">
-                                    <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
-                                    <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
-                                    <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
-                                    <span class="ml-2 text-slate-400">main.cpp</span>
-                                </div>
-
-                                <div class="space-y-1.5 text-slate-300">
-                                    <div><span class="text-purple-400">#include</span> <span class="text-amber-300">&lt;iostream&gt;</span></div>
-                                    <div><span class="text-purple-400">int</span> <span class="text-blue-400">main</span>() {</div>
-                                    <div class="pl-4 flex items-center gap-2 flex-wrap">
-                                        <span id="typing-prefix-code" class="text-emerald-400">std::cout &lt;&lt;</span>
-                                        <input type="text" id="typing-answer-input" autocomplete="off" placeholder="type answer here..." class="bg-slate-900 border border-brand-500/50 rounded px-2 py-1 text-xs text-amber-300 font-mono outline-none focus:ring-2 focus:ring-brand-500 min-w-[140px]" />
-                                        <span id="typing-suffix-code" class="text-emerald-400">;</span>
-                                    </div>
-                                    <div class="pl-4 text-purple-400">return <span class="text-orange-400">0</span>;</div>
-                                    <div>}</div>
-                                </div>
-                            </div>
-
-                            <!-- Answer Feedback Box -->
-                            <div id="typing-feedback" class="mt-3 p-3 rounded-xl text-xs font-semibold hidden"></div>
-                        </div>
-
-                        <div class="flex justify-end gap-3">
-                            <button onclick="checkTypingAnswer()" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-brand-600/20 transition">
-                                Validate & Run Code
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- MODE 3: 15-QUESTION QUIZ WORKSPACE -->
-                    <div id="quiz-workspace" class="hidden flex-1 flex flex-col justify-between space-y-4">
-                        <div>
-                            <!-- Quiz Progress Bar -->
-                            <div class="flex justify-between items-center text-xs text-slate-400 mb-2 font-medium">
-                                <span>Question <span id="quiz-q-num" class="text-brand-400 font-bold">1</span> of 15</span>
-                                <span>Score: <span id="quiz-current-score" class="text-amber-400 font-bold">0</span> XP</span>
-                            </div>
-                            <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden mb-4">
-                                <div id="quiz-progress-fill" class="h-full bg-brand-500 transition-all duration-300" style="width: 6.6%"></div>
-                            </div>
-
-                            <!-- Question Prompt -->
-                            <h3 id="quiz-question-text" class="text-base sm:text-lg font-bold text-white mb-4">What keyword is used to declare a variable that stores text in C++?</h3>
-
-                            <!-- Optional Code Snippet for Question -->
-                            <div id="quiz-code-box" class="bg-slate-950 p-3 rounded-xl border border-slate-800 font-mono text-xs text-emerald-400 mb-4 hidden">
-                                <pre id="quiz-code-text"></pre>
-                            </div>
-
-                            <!-- MCQ Shuffled Options Grid -->
-                            <div id="quiz-options-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <!-- Dynamically Rendered MCQs -->
-                            </div>
-                        </div>
-
-                        <!-- Quiz Feedback Bar -->
-                        <div id="quiz-feedback-banner" class="hidden p-4 rounded-xl text-xs flex justify-between items-center">
-                            <div>
-                                <p id="quiz-feedback-title" class="font-bold text-sm mb-0.5"></p>
-                                <p id="quiz-feedback-explanation" class="text-slate-300"></p>
-                            </div>
-                            <button onclick="nextQuizQuestion()" id="quiz-next-btn" class="px-4 py-2 bg-white text-slate-900 font-bold rounded-lg text-xs hover:bg-slate-200 transition shrink-0 ml-3">
-                                Continue
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>
-        </section>
-    </main>
-
-    <!-- QUIZ RESULTS SUMMARY MODAL -->
-    <div id="modal-quiz-results" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-cardbg border border-borderbg w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in duration-300">
-            <div class="text-center space-y-2">
-                <div id="result-icon-badge" class="w-16 h-16 rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/40 mx-auto flex items-center justify-center text-3xl">
-                    🏆
-                </div>
-                <h3 class="text-xl font-bold text-white">Quiz Session Completed!</h3>
-                <p class="text-xs text-slate-400">Great job testing your C++ knowledge.</p>
-            </div>
-
-            <!-- Score Stats Matrix -->
-            <div class="grid grid-cols-2 gap-3 text-center text-xs">
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <p class="text-slate-400">Score Achieved</p>
-                    <p id="res-score-text" class="text-xl font-extrabold text-brand-400 mt-1">14/15</p>
-                </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <p class="text-slate-400">Accuracy</p>
-                    <p id="res-percent-text" class="text-xl font-extrabold text-accent-400 mt-1">93%</p>
-                </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <p class="text-slate-400">XP Earned</p>
-                    <p id="res-xp-text" class="text-xl font-extrabold text-amber-400 mt-1">+140 XP</p>
-                </div>
-                <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-                    <p class="text-slate-400">Time Spent</p>
-                    <p id="res-time-text" class="text-xl font-extrabold text-slate-200 mt-1">04:12</p>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <button onclick="finishQuizSession()" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-brand-600/20 transition">
-                Return to Roadmap Dashboard
-            </button>
-        </div>
+  main.innerHTML = `
+  <div class="card">
+    <h1>Welcome, ${name}! 👋</h1>
+    <p class="muted">Current level: <b>Level ${cur} – ${esc(LEVELS[cur - 1])}</b></p>
+    <div class="grid">
+      <div class="stat"><div class="n">${pct}%</div><div class="l">Course complete (${done}/${TOTAL_LEVELS})</div></div>
+      <div class="stat"><div class="n">${last ? last.p + '%' : '—'}</div><div class="l">Last quiz score</div></div>
+      <div class="stat"><div class="n">🔥 ${streak()}</div><div class="l">Day streak</div></div>
+      <div class="stat"><div class="n">${fmtTime(totalSecs())}</div><div class="l">Total learning time</div></div>
     </div>
+    <div class="top"><span>Today's target: ${fmtTime(todaySecs)} / 30m</span><span>${Math.min(100, Math.round(todaySecs / DAILY_SECS * 100))}%</span></div>
+    <div class="progress"><div style="width:${Math.min(100, todaySecs / DAILY_SECS * 100)}%"></div></div>
+    <div class="progress"><div style="width:${pct}%;background:var(--green)"></div></div>
+    <div class="muted" style="font-size:12px">Blue: today's target · Green: whole course</div>
+    <button class="full" onclick="continueLearning()" ${canGo ? '' : 'disabled'}>▶ ${esc(label)}</button>
+  </div>
+  <div class="card"><h2>12-week roadmap</h2><p class="muted">Finish the lesson and score at least ${PASS}% in the quiz to unlock the next day. You can replay completed days at any time.</p>${weeks}</div>
+  <div class="card"><h2>Review incorrect answers</h2>${review}</div>`;
+}
+function clearWrong() { S.wrongCleared = Date.now(); S.wrong = []; scheduleSave(true); renderDash(); }
+function continueLearning() {
+  const r = S.resume && !S.resume.done && C[S.resume.n] ? S.resume : null;
+  openLevel(r ? r.n : currentLevel());
+}
 
-    <!-- SUPABASE CONFIG MODAL -->
-    <div id="modal-supabase-sync" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-cardbg border border-borderbg w-full max-w-md rounded-2xl p-6 shadow-2xl space-y-4">
-            <div class="flex justify-between items-center border-b border-slate-700/60 pb-3">
-                <h3 class="font-bold text-white text-base flex items-center gap-2">
-                    <i class="fa-solid fa-cloud text-brand-400"></i> Supabase Cloud Sync
-                </h3>
-                <button onclick="closeSyncModal()" class="text-slate-400 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <p class="text-xs text-slate-300 leading-relaxed">
-                Connect your free Supabase project to synchronize your daily streak, XP, and completed C++ levels across desktop and mobile devices.
-            </p>
+// =====================================================================
+// 8. LEARNING SESSION (flashcards → typing exercises → quiz)
+// =====================================================================
+function openLevel(n) {
+  if (!C[n]) return;
+  const r = S.resume;
+  LS = (r && !r.done && r.n === n) ? { n, phase: r.phase, idx: r.idx || 0, ls: r.ls || 0 } : { n, phase: 'cards', idx: 0, ls: 0 };
+  LS.flip = false; LS.fb = null; LS.given = '';
+  saveResume(); renderLearn();
+}
+function saveResume() { S.resume = { t: Date.now(), n: LS.n, phase: LS.phase, idx: LS.idx, ls: LS.ls }; scheduleSave(); }
 
-            <div class="space-y-3 text-xs">
-                <div>
-                    <label class="block text-slate-400 font-semibold mb-1">Supabase Project URL</label>
-                    <input type="text" id="supabase-url" placeholder="https://xyz.supabase.co" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 font-mono outline-none focus:border-brand-500" />
-                </div>
-                <div>
-                    <label class="block text-slate-400 font-semibold mb-1">Supabase Anon Key</label>
-                    <input type="password" id="supabase-key" placeholder="eyJhbGciOi..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-slate-200 font-mono outline-none focus:border-brand-500" />
-                </div>
-            </div>
+function renderLearn() {
+  mode = 'learn';
+  const L = C[LS.n], total = L.cards.length + L.typing.length;
+  const step = LS.phase === 'cards' ? LS.idx : LS.phase === 'type' ? L.cards.length + LS.idx : total;
+  let body = '';
+  if (LS.phase === 'cards') {
+    const c = L.cards[LS.idx];
+    body = `<div class="muted">Flashcard ${LS.idx + 1} of ${L.cards.length} · tap the card to flip</div>
+      <div class="flash ${LS.flip ? 'back' : ''}" onclick="flipCard()">
+        ${LS.flip ? `<div class="tag">Answer</div><div class="txt">${esc(c.b)}</div>${codeBlock(c.code)}`
+                  : `<div class="tag">Concept</div><div class="front">${esc(c.f)}</div>${codeBlock(c.fcode)}`}
+      </div>
+      <div class="row"><button class="sec" onclick="cardMove(-1)" ${LS.idx === 0 ? 'disabled' : ''}>← Back</button>
+      <button onclick="cardMove(1)">${LS.idx === L.cards.length - 1 ? 'Start typing practice →' : 'Next →'}</button></div>`;
+  } else if (LS.phase === 'type') {
+    const x = L.typing[LS.idx];
+    body = `<div class="muted">Typing practice ${LS.idx + 1} of ${L.typing.length}</div>
+      <p><b>${esc(x.p)}</b></p>${codeBlock(x.code)}
+      ${answerInput(LS.fb !== null, LS.given, LS.fb !== null ? 'learnNext()' : 'checkTyping()')}
+      ${LS.fb !== null ? fbHtml(LS.fb, x) + `<button class="full" onclick="learnNext()">${LS.idx === L.typing.length - 1 ? 'Finish practice →' : 'Next →'}</button>`
+                       : `<button class="full" onclick="checkTyping()">Check answer</button>`}`;
+  } else {
+    body = `<div style="text-align:center;padding:20px 0"><div class="big">🎯</div><h2>Learning done – quiz time!</h2>
+      <p class="muted">${QUIZ_N} questions on Level ${LS.n}. Score ${PASS}% or more to unlock the next level.</p>
+      <button onclick="startQuiz(${LS.n})">Start the quiz</button>
+      <div class="row"><button class="sec" onclick="LS.phase='cards';LS.idx=0;LS.flip=false;saveResume();renderLearn()">Review the flashcards again</button></div></div>`;
+  }
+  main.innerHTML = `<div class="card">
+    <div class="top"><button class="sec small" onclick="renderDash()">← Dashboard</button>
+      <span>⏱ <span class="timer" id="ltimer">${learnTimerText()}</span></span></div>
+    <h2 style="margin-top:12px">Level ${LS.n} · ${esc(LEVELS[LS.n - 1])}</h2>
+    <div class="progress"><div style="width:${step / total * 100}%"></div></div>
+    <div style="margin-top:14px">${body}</div></div>`;
+  focusAnswer();
+}
+const learnTimerText = () => LS.ls >= LEARN_SECS ? '15:00 done ✓' : mmss(LEARN_SECS - LS.ls) + ' left';
+function flipCard() { LS.flip = !LS.flip; renderLearn(); }
+function cardMove(d) {
+  const L = C[LS.n]; LS.flip = false;
+  if (d > 0 && LS.idx === L.cards.length - 1) { LS.phase = 'type'; LS.idx = 0; LS.fb = null; LS.given = ''; }
+  else LS.idx = Math.max(0, LS.idx + d);
+  saveResume(); renderLearn();
+}
+function checkTyping() {
+  const x = C[LS.n].typing[LS.idx]; LS.given = $('ans').value;
+  if (!LS.given.trim()) return;
+  LS.fb = isRight(LS.given, x); beep(LS.fb); renderLearn();
+}
+function learnNext() {
+  const L = C[LS.n]; LS.fb = null; LS.given = '';
+  if (LS.idx === L.typing.length - 1) LS.phase = 'ready'; else LS.idx++;
+  saveResume(); renderLearn();
+}
 
-            <div class="flex justify-end gap-2 pt-2">
-                <button onclick="closeSyncModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl">Cancel</button>
-                <button onclick="saveSupabaseConfig()" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white text-xs font-bold rounded-xl shadow-lg">Save & Connect</button>
-            </div>
-        </div>
+// ----- answer checking -----
+function norm(s, m) {
+  s = String(s).replace(/[“”„]/g, '"').replace(/[‘’]/g, "'").trim();        // phone keyboards use "smart" quotes
+  if (m === 'out') return s.replace(/\s+/g, ' ');                              // program output: spacing matters
+  if (m === 'word') return s.replace(/\s+/g, ' ').toLowerCase().replace(/[.!]$/, '');
+  return s.replace(/\s+/g, '');                                                 // code: ignore spaces, keep case
+}
+const isRight = (input, item) => item.a.some(a => norm(a, item.m) === norm(input, item.m));
+const correctText = item => item.type === 'mcq' ? item.o[0] : item.a[0];
+function answerInput(disabled, value, onEnter) {
+  return `<input id="ans" class="mono" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false"
+    placeholder="Type your answer" value="${esc(value)}" ${disabled ? 'disabled' : ''}
+    onkeydown="if(event.key==='Enter'){event.preventDefault();${onEnter}}">`;
+}
+function focusAnswer() { setTimeout(() => { const a = $('ans'); if (a && !a.disabled) a.focus(); }, 0); }
+function fbHtml(ok, item) {
+  return `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? '✅ Correct!' : '❌ Not quite.'}</b>
+    ${ok ? '' : `<div style="margin-top:6px">Correct answer: <code>${esc(correctText(item))}</code></div>`}
+    <div style="margin-top:6px">${esc(item.e)}</div></div>`;
+}
+
+// ----- sound effects (generated in the browser, no files needed) -----
+let actx = null;
+function beep(ok) {
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = ok ? [[660, 0], [880, .12]] : [[200, 0], [150, .16]];
+    notes.forEach(([f, t]) => {
+      const o = actx.createOscillator(), g = actx.createGain(), s = actx.currentTime + t;
+      o.type = ok ? 'sine' : 'triangle'; o.frequency.value = f;
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.25, s + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s + 0.2);
+      o.connect(g).connect(actx.destination); o.start(s); o.stop(s + 0.22);
+    });
+  } catch (e) {}
+}
+
+// =====================================================================
+// 9. QUIZ (15 questions, unseen questions first, shuffled options)
+// =====================================================================
+function buildQuiz(n) {
+  const L = C[n];
+  const pool = [...L.mcq.map((x, i) => ({ ...x, id: `L${n}-m${i}` })), ...L.typed.map((x, i) => ({ ...x, id: `L${n}-t${i}` }))];
+  let hist = S.seen[n] || { r: 0, ids: [] };
+  let unseen = pool.filter(x => !hist.ids.includes(x.id));
+  if (!unseen.length) { hist = { r: hist.r + 1, ids: [] }; S.seen[n] = hist; unseen = pool; }   // bank used up → start a new round
+  const nStatic = QUIZ_N - GEN_N;
+  let chosen = shuffle(unseen).slice(0, nStatic);
+  if (chosen.length < nStatic) chosen = chosen.concat(shuffle(pool.filter(x => !chosen.includes(x))).slice(0, nStatic - chosen.length));
+  const gi = shuffle(L.gens.map((_, i) => i)); const gen = [];
+  for (let i = 0; i < GEN_N; i++) { const k = gi[i % gi.length]; gen.push({ ...L.gens[k](), id: `L${n}-g${k}` }); }
+  return shuffle([...chosen, ...gen]).map(q => q.type === 'mcq' ? { ...q, shown: shuffle(q.o) } : q);
+}
+function startQuiz(n) {
+  if (LS && LS.n === n) { LS.phase = 'ready'; saveResume(); }
+  Q = { n, items: buildQuiz(n), i: 0, res: [], start: Date.now(), answered: false, choice: null, given: '' };
+  renderQuiz();
+}
+function renderQuiz() {
+  mode = 'quiz'; window.scrollTo(0, 0);
+  const q = Q.items[Q.i], ok = Q.answered ? Q.res[Q.i].ok : null;
+  let answer = '';
+  if (q.type === 'mcq') {
+    answer = q.shown.map((o, i) => {
+      let cls = '';
+      if (Q.answered) { if (o === q.o[0]) cls = 'right'; else if (i === Q.choice) cls = 'wrong'; }
+      return `<button class="opt ${cls}" ${Q.answered ? 'disabled' : `onclick="answerMCQ(${i})"`}><span class="k">${'ABCD'[i]}</span><span>${esc(o)}</span></button>`;
+    }).join('');
+  } else {
+    answer = answerInput(Q.answered, Q.given, Q.answered ? 'quizNext()' : 'answerTyped()') + (Q.answered ? '' : `<button class="full" onclick="answerTyped()">Submit answer</button>`);
+  }
+  const score = Q.res.filter(r => r.ok).length;
+  main.innerHTML = `<div class="card">
+    <div class="top"><button class="sec small" onclick="quitQuiz()">✕ Quit quiz</button>
+      <span>⏱ <span class="timer" id="qclock">${mmss((Date.now() - Q.start) / 1000)}</span> · Score ${score}/${Q.res.length}</span></div>
+    <h2 style="margin-top:12px">Level ${Q.n} quiz · Question ${Q.i + 1} of ${QUIZ_N}</h2>
+    <div class="progress"><div style="width:${Q.i / QUIZ_N * 100}%"></div></div>
+    <p style="margin-top:16px"><b>${esc(q.q)}</b></p>${codeBlock(q.code)}
+    ${answer}
+    ${Q.answered ? fbHtml(ok, q) + `<button class="full" onclick="quizNext()">${Q.i === QUIZ_N - 1 ? 'See my results →' : 'Next question →'}</button>` : ''}
+  </div>`;
+  focusAnswer();
+}
+function answerMCQ(i) { const q = Q.items[Q.i]; Q.choice = i; record(q.shown[i] === q.o[0], q.shown[i]); }
+function answerTyped() { const v = $('ans').value; if (!v.trim()) return; Q.given = v; record(isRight(v, Q.items[Q.i]), v); }
+function record(ok, given) { Q.res[Q.i] = { ok, given }; Q.answered = true; beep(ok); renderQuiz(); }
+function quizNext() {
+  if (Q.i === QUIZ_N - 1) return finishQuiz();
+  Q.i++; Q.answered = false; Q.choice = null; Q.given = ''; renderQuiz();
+}
+function quitQuiz() { if (confirm('Quit this quiz? Your answers so far will not be saved.')) { Q = null; renderDash(); } }
+
+function finishQuiz() {
+  const n = Q.n, correct = Q.res.filter(r => r.ok).length, pct = Math.round(correct / QUIZ_N * 100);
+  const secs = Math.round((Date.now() - Q.start) / 1000), now = Date.now();
+  const weak = [...new Set(Q.items.filter((q, i) => !Q.res[i].ok).map(q => q.tp))];
+  const att = { id: now.toString(36) + Math.random().toString(36).slice(2, 7), n, d: now, c: correct, t: QUIZ_N, p: pct, s: secs, w: weak };
+  S.attempts.push(att);
+  S.best[n] = Math.max(S.best[n] ?? 0, pct);
+  if (pct >= PASS) S.completed[n] = true;
+  const hist = S.seen[n] || { r: 0, ids: [] };                    // remember which bank questions were used
+  hist.ids = [...new Set([...hist.ids, ...Q.items.filter(q => !q.id.includes('-g')).map(q => q.id)])];
+  S.seen[n] = hist;
+  Q.items.forEach((q, i) => { if (!Q.res[i].ok) S.wrong.push({ id: q.id, d: now + i, n, q: q.q, code: q.code || '', ans: correctText(q), given: Q.res[i].given, e: q.e }); });
+  S.wrong = S.wrong.slice(-50);
+  S.resume = { t: now, n, done: true };
+  scheduleSave(true);
+  renderResults(att);
+}
+function renderResults(a) {
+  mode = 'results'; window.scrollTo(0, 0);
+  const passed = a.p >= PASS, next = a.n + 1;
+  main.innerHTML = `<div class="card" style="text-align:center">
+    <div style="font-size:40px">${passed ? '🎉' : '💪'}</div>
+    <div class="big" style="color:${passed ? 'var(--green)' : 'var(--red)'}">${a.p}%</div>
+    <h2>${passed ? `Level ${a.n} complete!` : `You need ${PASS}% to pass – try again!`}</h2>
+    <div class="grid" style="text-align:left">
+      <div class="stat"><div class="n">${a.t}</div><div class="l">Questions answered</div></div>
+      <div class="stat"><div class="n" style="color:var(--green)">${a.c}</div><div class="l">Correct</div></div>
+      <div class="stat"><div class="n" style="color:var(--red)">${a.t - a.c}</div><div class="l">Incorrect</div></div>
+      <div class="stat"><div class="n">${a.c}/${a.t}</div><div class="l">Score</div></div>
+      <div class="stat"><div class="n">${mmss(a.s)}</div><div class="l">Time taken</div></div>
     </div>
-
-    <!-- APPLICATION LOGIC & CURRICULUM SCRIPT -->
-    <script>
-        // ---------------------------------------------------------------------
-        // 1. CURRICULUM DATA MODEL (12 WEEKS / 84 LEVELS)
-        // ---------------------------------------------------------------------
-        const WEEKS_DATA = [
-            { week: 1, title: "Week 1: Fundamentals & Syntax Basics", topics: ["Syntax Basics", "Output std::cout", "New Lines \\n", "Comments //", "Variables Intro", "Print Variables", "Constants const"] },
-            { week: 2, title: "Week 2: Data Types & User Input", topics: ["cin Input", "Num Data Types", "float vs double", "Boolean Types", "Char Type", "String Intro", "Type Conversion"] },
-            { week: 3, title: "Week 3: Operators & Strings", topics: ["Arithmetic Ops", "Assignment Ops", "Comparison Ops", "Logical Ops", "String Concatenation", "String Length", "Access Characters"] },
-            { week: 4, title: "Week 4: Math & Booleans", topics: ["Special Characters", "User Input Strings", "Omitting Namespace", "C++ Math cmath", "Max & Min", "Boolean Expressions", "Real-Life Booleans"] },
-            { week: 5, title: "Week 5: Conditionals & Switches", topics: ["If Statement", "Else Statement", "Else If", "Shorthand If Else", "Switch Cases", "Default Case", "Nested Conditions"] },
-            { week: 6, title: "Week 6: Loops & Break/Continue", topics: ["While Loop", "Do/While Loop", "For Loop", "Nested Loops", "Foreach Loop", "Break Operator", "Continue Operator"] },
-            { week: 7, title: "Week 7: Arrays & Vector Intro", topics: ["Array Declaration", "Access Array Items", "Change Array Elements", "Loop Through Array", "Get Array Size", "Multi-Dimensional Arrays", "Vector Basics"] },
-            { week: 8, title: "Week 8: Structures & References", topics: ["Create Struct", "Multiple Structs", "Named Structs", "References &", "Memory Address", "Modify References", "Pass by Reference"] },
-            { week: 9, title: "Week 9: Pointers & Memory Management", topics: ["Create Pointers", "Dereferencing *", "Modify Pointers", "Pointers & Arrays", "Dynamic Memory", "new and delete", "Dangling Pointers"] },
-            { week: 10, title: "Week 10: Functions & Scope", topics: ["Create Function", "Call Function", "Function Parameters", "Default Arguments", "Return Values", "Function Overloading", "Variable Scope"] },
-            { week: 11, title: "Week 11: Object-Oriented Programming (OOP)", topics: ["OOP Concepts", "Classes & Objects", "Class Methods", "Constructors", "Access Specifiers", "Encapsulation", "Inheritance"] },
-            { week: 12, title: "Week 12: Advanced Files & Exceptions", topics: ["Polymorphism", "Files fstream", "Read & Write Files", "Exceptions try/catch", "Throw Keywords", "Templates Intro", "Final Master Capstone"] }
-        ];
-
-        // Flat array of 84 levels generated from weeks
-        const LESSONS = [];
-        let levelCounter = 1;
-        WEEKS_DATA.forEach(w => {
-            w.topics.forEach(t => {
-                LESSONS.push({
-                    id: levelCounter,
-                    week: w.week,
-                    title: t,
-                    flashcards: [
-                        {
-                            q: `What is the core syntax objective of ${t}?`,
-                            codeFront: `// C++ Objective: ${t}`,
-                            ans: `${t} forms an essential building block in C++ standard syntax programming.`,
-                            codeBack: `std::cout << "Mastering ${t}";`
-                        },
-                        {
-                            q: `How do we properly apply ${t} in a code snippet?`,
-                            codeFront: `#include <iostream>`,
-                            ans: `Always ensure correct header inclusion and semicolon termination.`,
-                            codeBack: `int main() {\n    // Implementation of ${t}\n    return 0;\n}`
-                        }
-                    ],
-                    typingExercise: {
-                        instruction: `Complete the C++ code to implement ${t}:`,
-                        prefix: `std::cout <<`,
-                        suffix: `;`,
-                        expected: `"${t}"`
-                    }
-                });
-                levelCounter++;
-            });
-        });
-
-        // Question Bank for Dynamic 15-Question Quiz Generation
-        const QUESTION_BANK = [
-            { id: 1, text: "Which header file allows outputting data via std::cout?", options: ["<iostream>", "<cmath>", "<string>", "<vector>"], correct: "<iostream>", exp: "<iostream> defines standard stream objects." },
-            { id: 2, text: "What operator is used to insert data into std::cout?", options: ["<<", ">>", "==", "::"], correct: "<<", exp: "The stream insertion operator << outputs data." },
-            { id: 3, text: "How do you end a line in C++ and flush the buffer?", options: ["std::endl", "std::stop", "end.line", "exit()"], correct: "std::endl", exp: "std::endl outputs a newline character and flushes the buffer." },
-            { id: 4, text: "Which keyword creates an unmodifiable constant variable?", options: ["const", "fixed", "static", "final"], correct: "const", exp: "const locks a variable's value against reassignment." },
-            { id: 5, text: "What symbol is used for single-line comments in C++?", options: ["//", "/*", "#", "--"], correct: "//", exp: "// starts a single-line comment." },
-            { id: 6, text: "Which variable type stores text surrounded by double quotes?", options: ["std::string", "char", "int", "bool"], correct: "std::string", exp: "std::string handles sequences of text characters." },
-            { id: 7, text: "What keyword is used to take keyboard input from the user?", options: ["std::cin", "std::cout", "read()", "input()"], correct: "std::cin", exp: "std::cin reads standard user input." },
-            { id: 8, text: "Which operator gets the memory address of a variable?", options: ["&", "*", "->", "%"], correct: "&", exp: "The address-of operator & returns a variable's memory location." },
-            { id: 9, text: "What operator dereferences a pointer variable?", options: ["*", "&", ".", "::"], correct: "*", exp: "The dereference operator * accesses the value stored at a memory address." },
-            { id: 10, text: "Which keyword is used to allocate memory dynamically on the heap?", options: ["new", "malloc", "create", "alloc"], correct: "new", exp: "new allocates heap memory dynamically." },
-            { id: 11, text: "Which access specifier makes class members accessible from outside the class?", options: ["public", "private", "protected", "internal"], correct: "public", exp: "public members can be accessed anywhere in the program." },
-            { id: 12, text: "What file stream class is used for reading from files?", options: ["ifstream", "ofstream", "fstream", "iostream"], correct: "ifstream", exp: "ifstream handles file input stream reading." },
-            { id: 13, text: "What block handles exceptions thrown during execution?", options: ["catch", "try", "throw", "finally"], correct: "catch", exp: "The catch block intercepts exceptions thrown from a try block." },
-            { id: 14, text: "Which function serves as the entry point of every executable C++ program?", options: ["main()", "start()", "init()", "cpp_main()"], correct: "main()", exp: "Execution always begins at the main() function." },
-            { id: 15, text: "What is the index of the first element in a standard C++ array?", options: ["0", "1", "-1", "0.5"], correct: "0", exp: "C++ arrays are zero-indexed." }
-        ];
-
-        // ---------------------------------------------------------------------
-        // 2. STATE MANAGEMENT & LOCAL STORAGE
-        // ---------------------------------------------------------------------
-        let userState = {
-            name: "Learner",
-            completedLevels: [],
-            currentLevel: 1,
-            xp: 0,
-            streak: 1,
-            totalTimeMins: 0,
-            mistakes: [],
-            supabaseUrl: "",
-            supabaseKey: ""
-        };
-
-        let currentSession = {
-            levelId: 1,
-            cardIndex: 0,
-            timerInterval: null,
-            secondsRemaining: 900,
-            quizQuestions: [],
-            quizIndex: 0,
-            quizScore: 0,
-            quizTimeSpent: 0
-        };
-
-        // Load Initial Saved State
-        function loadSavedState() {
-            const saved = localStorage.getItem('cpp_master_state');
-            if (saved) {
-                try {
-                    userState = { ...userState, ...JSON.parse(saved) };
-                } catch (e) { console.error("Error loading saved state", e); }
-            }
-            updateUI();
-        }
-
-        function saveState() {
-            localStorage.setItem('cpp_master_state', JSON.stringify(userState));
-            updateUI();
-            syncWithSupabase();
-        }
-
-        function updateUI() {
-            document.getElementById('stat-streak').innerText = userState.streak;
-            document.getElementById('stat-xp').innerText = userState.xp;
-            document.getElementById('stat-level').innerText = userState.currentLevel;
-            document.getElementById('stat-completed').innerText = `${userState.completedLevels.length}/84`;
-            document.getElementById('stat-time').innerText = `${userState.totalTimeMins}m`;
-
-            const percent = Math.round((userState.completedLevels.length / 84) * 100);
-            document.getElementById('progress-percent').innerText = `${percent}%`;
-            document.getElementById('progress-bar-fill').style.width = `${percent}%`;
-
-            // Mistakes badge
-            const mBadge = document.getElementById('mistake-count-badge');
-            if (userState.mistakes.length > 0) {
-                mBadge.innerText = userState.mistakes.length;
-                mBadge.classList.remove('hidden');
-            } else {
-                mBadge.classList.add('hidden');
-            }
-
-            // Cloud sync indicator badge
-            const syncIcon = document.getElementById('sync-icon');
-            const syncText = document.getElementById('sync-text');
-            if (userState.supabaseUrl && userState.supabaseKey) {
-                syncIcon.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse";
-                syncText.innerText = "Cloud Synced";
-            } else {
-                syncIcon.className = "w-2.5 h-2.5 rounded-full bg-slate-500";
-                syncText.innerText = "Local Only";
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // 3. WEB AUDIO API SYNTHESIZER (SOUND EFFECTS)
-        // ---------------------------------------------------------------------
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        function playSound(type) {
-            try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                if (type === 'correct') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-                    osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
-                } else {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
-                    osc.frequency.setValueAtTime(146.83, audioCtx.currentTime + 0.15); // D3
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.35);
-                }
-            } catch (e) { /* Audio fallback silence */ }
-        }
-
-        // ---------------------------------------------------------------------
-        // 4. ROADMAP RENDERING & TAB NAVIGATION
-        // ---------------------------------------------------------------------
-        function renderRoadmap() {
-            const container = document.getElementById('roadmap-tree-container');
-            const filterWeek = document.getElementById('week-filter').value;
-            container.innerHTML = '';
-
-            WEEKS_DATA.forEach(w => {
-                if (filterWeek !== 'all' && parseInt(filterWeek) !== w.week) return;
-
-                const weekCard = document.createElement('div');
-                weekCard.className = "bg-slate-900/80 border border-slate-800 rounded-2xl p-5 space-y-4";
-                
-                let lessonsHTML = '';
-                const startLevel = (w.week - 1) * 7 + 1;
-                
-                for (let i = 0; i < w.topics.length; i++) {
-                    const levelNum = startLevel + i;
-                    const isCompleted = userState.completedLevels.includes(levelNum);
-                    const isActive = userState.currentLevel === levelNum;
-                    const isLocked = !isCompleted && !isActive && levelNum > userState.currentLevel;
-
-                    let btnClass = "bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 cursor-pointer";
-                    let icon = `<i class="fa-solid fa-lock text-slate-500"></i>`;
-
-                    if (isCompleted) {
-                        btnClass = "bg-brand-950/60 border-brand-500/40 text-brand-300 hover:bg-brand-900/60 cursor-pointer";
-                        icon = `<i class="fa-solid fa-circle-check text-brand-400"></i>`;
-                    } else if (isActive) {
-                        btnClass = "bg-gradient-to-r from-brand-600 to-accent-600 border-white text-white shadow-lg active-level-glow cursor-pointer";
-                        icon = `<i class="fa-solid fa-play text-white"></i>`;
-                    }
-
-                    lessonsHTML += `
-                        <div onclick="startLesson(${levelNum})" class="flex items-center justify-between p-3.5 rounded-xl border transition ${btnClass}">
-                            <div class="flex items-center gap-3">
-                                <span class="w-8 h-8 rounded-lg bg-slate-950/50 flex items-center justify-center font-bold text-xs">${levelNum}</span>
-                                <span class="font-semibold text-sm">${w.topics[i]}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                ${isCompleted ? '<span class="text-xs text-brand-400 font-medium">Done</span>' : ''}
-                                ${isActive ? '<span class="text-xs bg-white/20 px-2 py-0.5 rounded text-white font-medium">Active</span>' : ''}
-                                ${icon}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                weekCard.innerHTML = `
-                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                        <h3 class="font-bold text-base text-slate-200">${w.title}</h3>
-                        <span class="text-xs text-slate-400">Levels ${startLevel} - ${startLevel + 6}</span>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        ${lessonsHTML}
-                    </div>
-                `;
-                container.appendChild(weekCard);
-            });
-        }
-
-        function switchTab(tab) {
-            ['roadmap', 'review', 'docs', 'schema', 'session'].forEach(t => {
-                const el = document.getElementById(`tab-${t}-content`);
-                const nav = document.getElementById(`nav-${t}`);
-                if (el) el.classList.add('hidden');
-                if (nav) {
-                    nav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition text-slate-400 hover:bg-slate-800 hover:text-slate-200";
-                }
-            });
-
-            document.getElementById(`tab-${tab}-content`).classList.remove('hidden');
-            const activeNav = document.getElementById(`nav-${tab}`);
-            if (activeNav) {
-                activeNav.className = "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition bg-brand-500/10 text-brand-400 border border-brand-500/30";
-            }
-
-            if (tab === 'roadmap') renderRoadmap();
-            if (tab === 'review') renderReviewMistakes();
-        }
-
-        // ---------------------------------------------------------------------
-        // 5. LEARNING SESSION CONTROLLER (FLASHCARD / TYPING / QUIZ)
-        // ---------------------------------------------------------------------
-        function startCurrentLesson() {
-            startLesson(userState.currentLevel);
-        }
-
-        function startLesson(levelId) {
-            currentSession.levelId = levelId;
-            currentSession.cardIndex = 0;
-            currentSession.secondsRemaining = 900; // 15 mins countdown
-
-            const lesson = LESSONS.find(l => l.id === levelId) || LESSONS[0];
-            document.getElementById('session-title').innerText = `Level ${lesson.id}: ${lesson.title}`;
-
-            switchTab('session');
-            startSessionTimer();
-            showFlashcardMode(lesson);
-        }
-
-        function startSessionTimer() {
-            clearInterval(currentSession.timerInterval);
-            currentSession.timerInterval = setInterval(() => {
-                currentSession.secondsRemaining--;
-                const mins = Math.floor(currentSession.secondsRemaining / 60);
-                const secs = currentSession.secondsRemaining % 60;
-                document.getElementById('session-timer-display').innerText = 
-                    `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-                
-                if (currentSession.secondsRemaining <= 0) {
-                    clearInterval(currentSession.timerInterval);
-                }
-            }, 1000);
-        }
-
-        function exitSession() {
-            clearInterval(currentSession.timerInterval);
-            userState.totalTimeMins += Math.max(1, Math.round((900 - currentSession.secondsRemaining) / 60));
-            saveState();
-            switchTab('roadmap');
-        }
-
-        // --- FLASHCARD ENGINE ---
-        function showFlashcardMode(lesson) {
-            document.getElementById('flashcard-workspace').classList.remove('hidden');
-            document.getElementById('typing-workspace').classList.add('hidden');
-            document.getElementById('quiz-workspace').classList.add('hidden');
-            renderFlashcard();
-        }
-
-        function renderFlashcard() {
-            const lesson = LESSONS.find(l => l.id === currentSession.levelId);
-            const card = lesson.flashcards[currentSession.cardIndex];
-            
-            // Reset Flip
-            document.getElementById('flashcard-element').classList.remove('rotate-y-180');
-
-            document.getElementById('card-question').innerText = card.q;
-            document.getElementById('card-answer').innerText = card.ans;
-            
-            const frontCode = document.getElementById('card-front-code');
-            const frontContainer = document.getElementById('card-front-code-container');
-            if (card.codeFront) {
-                frontCode.innerText = card.codeFront;
-                frontContainer.classList.remove('hidden');
-            } else frontContainer.classList.add('hidden');
-
-            document.getElementById('card-back-code').innerText = card.codeBack;
-            document.getElementById('card-counter').innerText = `${currentSession.cardIndex + 1} / ${lesson.flashcards.length}`;
-        }
-
-        function flipFlashcard() {
-            document.getElementById('flashcard-element').classList.toggle('rotate-y-180');
-        }
-
-        function nextFlashcard() {
-            const lesson = LESSONS.find(l => l.id === currentSession.levelId);
-            if (currentSession.cardIndex < lesson.flashcards.length - 1) {
-                currentSession.cardIndex++;
-                renderFlashcard();
-            } else {
-                // Transition to Typing Mode
-                showTypingMode(lesson);
-            }
-        }
-
-        function prevFlashcard() {
-            if (currentSession.cardIndex > 0) {
-                currentSession.cardIndex--;
-                renderFlashcard();
-            }
-        }
-
-        // --- TYPING ENGINE ---
-        function showTypingMode(lesson) {
-            document.getElementById('flashcard-workspace').classList.add('hidden');
-            document.getElementById('typing-workspace').classList.remove('hidden');
-            document.getElementById('quiz-workspace').classList.add('hidden');
-
-            document.getElementById('typing-instruction').innerText = lesson.typingExercise.instruction;
-            document.getElementById('typing-prefix-code').innerText = lesson.typingExercise.prefix;
-            document.getElementById('typing-suffix-code').innerText = lesson.typingExercise.suffix;
-            document.getElementById('typing-answer-input').value = '';
-            
-            const fb = document.getElementById('typing-feedback');
-            fb.classList.add('hidden');
-        }
-
-        function checkTypingAnswer() {
-            const lesson = LESSONS.find(l => l.id === currentSession.levelId);
-            const val = document.getElementById('typing-answer-input').value.trim();
-            const fb = document.getElementById('typing-feedback');
-
-            if (val.replace(/'|"/g, '') === lesson.typingExercise.expected.replace(/'|"/g, '')) {
-                playSound('correct');
-                fb.className = "mt-3 p-3 rounded-xl text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-500/50";
-                fb.innerText = "✓ Excellent! Code compiled and executed successfully.";
-                fb.classList.remove('hidden');
-
-                setTimeout(() => {
-                    start15QuestionQuiz();
-                }, 1200);
-            } else {
-                playSound('wrong');
-                fb.className = "mt-3 p-3 rounded-xl text-xs font-semibold bg-rose-950/80 text-rose-300 border border-rose-500/50";
-                fb.innerText = `✕ Syntax Error! Expected matching expression: ${lesson.typingExercise.expected}`;
-                fb.classList.remove('hidden');
-            }
-        }
-
-        // ---------------------------------------------------------------------
-        // 6. 15-QUESTION DYNAMIC QUIZ ENGINE
-        // ---------------------------------------------------------------------
-        function start15QuestionQuiz() {
-            document.getElementById('flashcard-workspace').classList.add('hidden');
-            document.getElementById('typing-workspace').classList.add('hidden');
-            document.getElementById('quiz-workspace').classList.remove('hidden');
-
-            // Pick 15 Dynamic Shuffled Questions from Question Bank
-            let shuffled = [...QUESTION_BANK].sort(() => 0.5 - Math.random());
-            currentSession.quizQuestions = shuffled.slice(0, 15);
-            currentSession.quizIndex = 0;
-            currentSession.quizScore = 0;
-
-            renderQuizQuestion();
-        }
-
-        function renderQuizQuestion() {
-            const q = currentSession.quizQuestions[currentSession.quizIndex];
-            document.getElementById('quiz-q-num').innerText = currentSession.quizIndex + 1;
-            document.getElementById('quiz-current-score').innerText = currentSession.quizScore * 10;
-            document.getElementById('quiz-progress-fill').style.width = `${((currentSession.quizIndex + 1) / 15) * 100}%`;
-            
-            document.getElementById('quiz-question-text').innerText = q.text;
-            document.getElementById('quiz-feedback-banner').classList.add('hidden');
-
-            const grid = document.getElementById('quiz-options-grid');
-            grid.innerHTML = '';
-
-            // Shuffle MCQ Options A, B, C, D
-            let shuffledOptions = [...q.options].sort(() => 0.5 - Math.random());
-
-            shuffledOptions.forEach((opt, idx) => {
-                const letter = String.fromCharCode(65 + idx);
-                const btn = document.createElement('button');
-                btn.className = "w-full text-left p-3.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-brand-500/60 hover:bg-slate-800/80 transition text-xs font-medium text-slate-200 flex items-center gap-3";
-                btn.onclick = () => selectQuizAnswer(opt, q);
-                btn.innerHTML = `
-                    <span class="w-6 h-6 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 font-bold flex items-center justify-center shrink-0">${letter}</span>
-                    <span>${opt}</span>
-                `;
-                grid.appendChild(btn);
-            });
-        }
-
-        function selectQuizAnswer(selected, question) {
-            const banner = document.getElementById('quiz-feedback-banner');
-            const title = document.getElementById('quiz-feedback-title');
-            const exp = document.getElementById('quiz-feedback-explanation');
-            const grid = document.getElementById('quiz-options-grid');
-
-            // Disable buttons after answer selection
-            Array.from(grid.children).forEach(child => child.disabled = true);
-
-            if (selected === question.correct) {
-                playSound('correct');
-                currentSession.quizScore++;
-                banner.className = "p-4 rounded-xl text-xs flex justify-between items-center bg-emerald-950/90 border border-emerald-500/50 text-emerald-200";
-                title.innerText = "✓ Correct Answer!";
-                exp.innerText = question.exp;
-            } else {
-                playSound('wrong');
-                banner.className = "p-4 rounded-xl text-xs flex justify-between items-center bg-rose-950/90 border border-rose-500/50 text-rose-200";
-                title.innerText = `✕ Incorrect (Right answer: ${question.correct})`;
-                exp.innerText = question.exp;
-
-                // Record Mistake for Review Tab
-                if (!userState.mistakes.some(m => m.id === question.id)) {
-                    userState.mistakes.push(question);
-                }
-            }
-
-            banner.classList.remove('hidden');
-        }
-
-        function nextQuizQuestion() {
-            if (currentSession.quizIndex < 14) {
-                currentSession.quizIndex++;
-                renderQuizQuestion();
-            } else {
-                showQuizResults();
-            }
-        }
-
-        function showQuizResults() {
-            clearInterval(currentSession.timerInterval);
-
-            // Award XP & Update Progress
-            const xpGained = currentSession.quizScore * 10;
-            userState.xp += xpGained;
-
-            if (!userState.completedLevels.includes(currentSession.levelId)) {
-                userState.completedLevels.push(currentSession.levelId);
-                if (currentSession.levelId === userState.currentLevel && userState.currentLevel < 84) {
-                    userState.currentLevel++;
-                }
-            }
-
-            saveState();
-
-            const percent = Math.round((currentSession.quizScore / 15) * 100);
-            document.getElementById('res-score-text').innerText = `${currentSession.quizScore}/15`;
-            document.getElementById('res-percent-text').innerText = `${percent}%`;
-            document.getElementById('res-xp-text').innerText = `+${xpGained} XP`;
-            
-            const timeTaken = 900 - currentSession.secondsRemaining;
-            const m = Math.floor(timeTaken / 60);
-            const s = timeTaken % 60;
-            document.getElementById('res-time-text').innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-
-            document.getElementById('modal-quiz-results').classList.remove('hidden');
-        }
-
-        function finishQuizSession() {
-            document.getElementById('modal-quiz-results').classList.add('hidden');
-            switchTab('roadmap');
-        }
-
-        // ---------------------------------------------------------------------
-        // 7. REVIEW MISTAKES TAB
-        // ---------------------------------------------------------------------
-        function renderReviewMistakes() {
-            const list = document.getElementById('review-list');
-            list.innerHTML = '';
-
-            if (userState.mistakes.length === 0) {
-                list.innerHTML = `
-                    <div class="text-center py-8 text-slate-500 space-y-2">
-                        <i class="fa-solid fa-circle-check text-3xl text-brand-400"></i>
-                        <p class="text-sm font-semibold">No Weak Topics Recorded!</p>
-                        <p class="text-xs">Any quiz questions answered incorrectly will appear here for review.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            userState.mistakes.forEach(m => {
-                const item = document.createElement('div');
-                item.className = "bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2 text-xs";
-                item.innerHTML = `
-                    <p class="font-bold text-slate-200 text-sm">${m.text}</p>
-                    <p class="text-emerald-400 font-mono">Correct Answer: ${m.correct}</p>
-                    <p class="text-slate-400 leading-relaxed">${m.exp}</p>
-                `;
-                list.appendChild(item);
-            });
-        }
-
-        // ---------------------------------------------------------------------
-        // 8. SUPABASE CONFIG & SYNC REST CLIENT
-        // ---------------------------------------------------------------------
-        function openSyncModal() {
-            document.getElementById('supabase-url').value = userState.supabaseUrl || '';
-            document.getElementById('supabase-key').value = userState.supabaseKey || '';
-            document.getElementById('modal-supabase-sync').classList.remove('hidden');
-        }
-
-        function closeSyncModal() {
-            document.getElementById('modal-supabase-sync').classList.add('hidden');
-        }
-
-        function saveSupabaseConfig() {
-            userState.supabaseUrl = document.getElementById('supabase-url').value.trim();
-            userState.supabaseKey = document.getElementById('supabase-key').value.trim();
-            saveState();
-            closeSyncModal();
-        }
-
-        async function syncWithSupabase() {
-            if (!userState.supabaseUrl || !userState.supabaseKey) return;
-
-            try {
-                // Upsert Profile State to Supabase REST API
-                await fetch(`${userState.supabaseUrl}/rest/v1/user_profiles`, {
-                    method: 'POST',
-                    headers: {
-                        'apikey': userState.supabaseKey,
-                        'Authorization': `Bearer ${userState.supabaseKey}`,
-                        'Content-Type': 'application/json',
-                        'Prefer': 'resolution=merge-duplicates'
-                    },
-                    body: JSON.stringify({
-                        user_name: userState.name,
-                        current_level: userState.currentLevel,
-                        xp: userState.xp,
-                        streak: userState.streak,
-                        total_time_mins: userState.totalTimeMins
-                    })
-                });
-            } catch (err) {
-                console.warn("Supabase Sync Network Exception", err);
-            }
-        }
-
-        function copySqlSchema() {
-            const sqlText = document.getElementById('sql-schema-block').innerText;
-            const btnText = document.getElementById('copy-sql-btn-text');
-            
-            const textarea = document.createElement('textarea');
-            textarea.value = sqlText;
-            document.body.appendChild(textarea);
-            textarea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textarea);
-
-            btnText.innerText = "Copied!";
-            setTimeout(() => btnText.innerText = "Copy SQL", 2000);
-        }
-
-        // Initialize Application
-        window.onload = function() {
-            loadSavedState();
-            renderRoadmap();
-        };
-    </script>
+    <div style="text-align:left"><h3>Topics to improve</h3>${a.w.length ? a.w.map(w => `<span class="chip">${esc(w)}</span>`).join('') : '<span class="muted">None – perfect score! 🌟</span>'}</div>
+    <div class="row">
+      <button class="sec" onclick="startQuiz(${a.n})">Retry quiz (new questions)</button>
+      ${passed && C[next] ? `<button onclick="openLevel(${next})">Next: Level ${next} →</button>` : `<button onclick="renderDash()">Back to dashboard</button>`}
+    </div>
+    ${passed && !C[next] && next <= TOTAL_LEVELS ? `<p class="muted">Level ${next} content is coming soon.</p>` : ''}
+  </div>`;
+}
+
+// =====================================================================
+// 10. LEARNING-TIME TRACKER (counts only while learning or in a quiz)
+// =====================================================================
+let tick = 0;
+setInterval(() => {
+  if (!user || document.hidden || (mode !== 'learn' && mode !== 'quiz')) return;
+  const d = today(); S.daily[d] = (S.daily[d] || 0) + 1; tick++;
+  if (mode === 'learn' && LS) { LS.ls++; const el = $('ltimer'); if (el) el.textContent = learnTimerText(); if (tick % 15 === 0) saveResume(); }
+  if (mode === 'quiz' && Q) { const el = $('qclock'); if (el) el.textContent = mmss((Date.now() - Q.start) / 1000); }
+  if (tick % 30 === 0) scheduleSave();
+}, 1000);
+
+// =====================================================================
+// 11. START
+// =====================================================================
+// Show any unexpected error on the page instead of leaving it blank
+function showFatal(title, detail) {
+  main.innerHTML = `<div class="card" style="max-width:520px;margin:30px auto"><h2>⚠ ${esc(title)}</h2>
+    <p>${detail}</p><button class="full" onclick="location.reload()">Reload the page</button></div>`;
+}
+window.addEventListener('error', e => { if (!user && mode === 'auth' && !$('email')) showFatal('Something went wrong', 'Error: <code>' + esc(e.message) + '</code><br>Please send this message to get help.'); });
+
+const BLOCKED_HELP = `The login library could not be downloaded. This usually means an <b>ad blocker or privacy extension</b>
+  (for example uBlock Origin, AdBlock, Privacy Badger or Ghostery) or a strict privacy setting is blocking it.<br><br>
+  Try: (1) turn off the ad blocker for this site, (2) in Firefox, click the shield icon in the address bar and turn off
+  Enhanced Tracking Protection for this site, or (3) open the site in a private/incognito window.`;
+
+function loadScript(src) {
+  return new Promise((ok, fail) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = fail; document.head.appendChild(s); });
+}
+async function boot() {
+  if (!configured) return renderAuth();
+  if (typeof supabase === 'undefined') {                       // first server blocked → try a second one
+    main.innerHTML = '<div class="card">Loading…</div>';
+    try { await loadScript('https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'); } catch (e) {}
+  }
+  if (typeof supabase === 'undefined') return showFatal('Could not load the website', BLOCKED_HELP);
+  db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  renderAuth();
+  db.auth.onAuthStateChange((ev, session) => {
+    if (ev === 'PASSWORD_RECOVERY') { recovering = true; if (user) setTimeout(() => renderNewPassword(), 0); }
+    const u = session ? session.user : null;
+    if ((u && u.id) === (user && user.id)) return;
+    setTimeout(() => onUser(u), 0);
+  });
+}
+boot();
+</script>
 </body>
 </html>
